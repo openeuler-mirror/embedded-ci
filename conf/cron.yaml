@@ -1,0 +1,28 @@
+build_list:
+  - arch: aarch64
+    toolchain: openeuler_gcc_arm64le
+    board: 
+    - name: qemu 
+      platform: aarch64-std
+      directory: aarch64-qemu
+      bitbake:
+      - target: openeuler-image
+      delete_cache: output|cache|sstate-cache
+  - arch: arm32
+    toolchain: openeuler_gcc_arm32le
+    board: 
+    - name: qemu
+      platform: arm-std
+      directory: arm32-qemu
+      bitbake:
+      - target: openeuler-image
+      delete_cache: output|cache|sstate-cache
+  - arch: x86-64
+    toolchain: openeuler_gcc_x86_64
+    board: 
+    - name: qemu
+      platform: x86-64-std
+      directory: x86-64-qemu
+      bitbake:
+      - target: openeuler-image
+      delete_cache: output|cache|sstate-cache

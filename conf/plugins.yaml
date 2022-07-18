@@ -1,0 +1,13 @@
+plugins:
+- name: cron
+  class: Cron
+  path: plugins/cron/cron.py
+- name: gate
+  class: Gate
+  path: plugins/gate/gate.py
+- name: ci
+  class: CI
+  path: plugins/ci/ci.py
+- name: otest
+  class: OTest
+  path: plugins/otest/otest.py
