@@ -8,6 +8,39 @@ build_list:
       bitbake:
       - target: openeuler-image
       delete_cache: output|cache|sstate-cache
+    - name: qemu-ros 
+      platform: aarch64-std
+      directory: aarch64-qemu-ros
+      feature: 
+      - name: openeuler-ros
+      bitbake:
+      - target: openeuler-image-ros
+      delete_cache: output|cache|sstate-cache
+    - name: raspberrypi4-64 
+      platform: raspberrypi4-64
+      directory: raspberrypi4-64
+      bitbake:
+      - target: openeuler-image
+      - target: openeuler-image -c do_populate_sdk
+      delete_cache: output|cache|sstate-cache
+    - name: raspberrypi4-64-rt
+      platform: raspberrypi4-64
+      directory: raspberrypi4-64-rt
+      feature: 
+      - name: openeuler-rt
+      bitbake:
+      - target: openeuler-image
+      - target: openeuler-image -c do_populate_sdk
+      delete_cache: output|cache|sstate-cache
+    - name: raspberrypi4-64-ros
+      platform: raspberrypi4-64
+      directory: raspberrypi4-64-ros
+      feature: 
+      - name: openeuler-ros
+      bitbake:
+      - target: openeuler-image
+      - target: openeuler-image -c do_populate_sdk
+      delete_cache: output|cache|sstate-cache
   - arch: arm32
     toolchain: openeuler_gcc_arm32le
     board: 
@@ -25,4 +58,23 @@ build_list:
       directory: x86-64-qemu
       bitbake:
       - target: openeuler-image
+      delete_cache: output|cache|sstate-cache
+    - name: qemu-rt
+      platform: x86-64-std
+      directory: x86-64-rt
+      feature: 
+      - name: openeuler-rt
+      bitbake:
+      - target: openeuler-image
+      - target: openeuler-image -c do_populate_sdk
+      delete_cache: output|cache|sstate-cache
+  - arch: riscv64
+    toolchain: openeuler_gcc_riscv64
+    board: 
+    - name: qemu
+      platform: riscv64-std
+      directory: riscv64-qemu
+      bitbake:
+      - target: openeuler-image
+      - target: openeuler-image -c do_populate_sdk
       delete_cache: output|cache|sstate-cache

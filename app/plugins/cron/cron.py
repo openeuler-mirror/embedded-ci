@@ -15,10 +15,15 @@ import subprocess
 import logging
 import argparse
 import shutil
+import time
+from io import StringIO
+
+import yaml
 
 from app import util
 from app.command import Command
 from app import const
+from app.lib import Gitee
 
 log = logging.getLogger()
 
@@ -27,6 +32,8 @@ class Cron(Command):
     Cron is to generate sstate-cache timing
     '''
     def __init__(self):
+        self.gitee = None
+        self.branch = None
         super().__init__(
         "cron", 
         "this is a CI timed task", 
@@ -34,13 +41,17 @@ class Cron(Command):
 
     def do_add_parser(self,parser_addr: argparse._SubParsersAction):
         parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-s', '--share_dir', dest="share_dir")
-        parser.add_argument('-b', '--branch', dest="branch", default="master")
+        parser.add_argument('-s', '--share_dir', dest = "share_dir")
+        parser.add_argument('-b', '--branch', dest = "branch", default="master")
         parser.add_argument('-m',
                             '--tmp_dir',
-                            dest="tmp_dir",
-                            default="/home/jenkins/agent/openeuler_tmp")
+                            dest = "tmp_dir",
+                            default = "/home/jenkins/agent/openeuler_tmp")
         parser.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
+        parser.add_argument('-o', '--owner', dest = "owner")
+        parser.add_argument('-p', '--repo', dest = "repo")
+        parser.add_argument('-gt', '--gitee_token', dest = "gitee_token")
+        parser.add_argument('-sf', '--send_faild', dest = "is_send_faild", action = "store_true")
 
         return parser
 
@@ -51,8 +62,13 @@ class Cron(Command):
             os.makedirs(cron_workspace)
         workspace = os.path.join(cron_workspace, f"openeuler_{args.branch}")
 
+        self.branch = args.branch
+
         if not os.path.exists(args.tmp_dir):
             os.makedirs(args.tmp_dir)
+
+        if args.is_send_faild:
+            self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
 
         self.exec(workspace=workspace,
                   branch=args.branch,
@@ -83,6 +99,10 @@ class Cron(Command):
         if err_code != 0:
             raise ValueError(result)
         print(result)
+
+        # rm manifest is for building without manifest file
+        yocto_dir = os.path.join(workspace, "src/yocto-meta-openeuler")
+        self.rm_manifest_file(yocto_dir=yocto_dir)
 
         # get cron config
         conf_dir = util.get_conf_path()
@@ -173,3 +193,59 @@ class Cron(Command):
             if os.path.exists(delete_dir):
                 shutil.rmtree(delete_dir)
                 print(f"delete {delete_dir} successful")
+
+    def send_issue_with_build_faild(self, build_faild_list):
+        '''
+        send build faild message to issue
+        '''
+        def format_build_list(build_faild_list):
+            msg_data = {}
+            for build_faild in build_faild_list:
+                if build_faild['arch'] in msg_data:
+                    msg_arch = msg_data[build_faild['arch']]
+                else:
+                    msg_arch = {}
+
+                if build_faild['directory'] in msg_arch:
+                    msg_arch_directory = msg_arch[build_faild['directory']]
+                else:
+                    msg_arch_directory = {}
+
+                if "generate" not in msg_arch_directory:
+                    msg_arch_directory['generate'] = build_faild['generate']
+
+                if "target" in msg_arch_directory:
+                    msg_arch_directory_target = msg_arch_directory['target']
+                else:
+                    msg_arch_directory_target = []
+
+                msg_arch_directory_target.append(f"bitbake {build_faild['bitbake']}")
+
+                msg_arch_directory['target'] = msg_arch_directory_target
+                msg_arch[build_faild['directory']] = msg_arch_directory
+
+                msg_data[build_faild['arch']] = msg_arch
+            return msg_data
+
+        if len(build_faild_list) <= 0:
+            return
+        msg_data = format_build_list(build_faild_list)
+        with StringIO() as sio:
+            yaml.dump(msg_data, stream=sio)
+            issue_msg = sio.getvalue()
+            build_url = os.path.join(os.environ['BUILD_URL'], 'console')
+            issue_msg = issue_msg + "\n\n"
+            issue_msg = issue_msg + f"please click <a href={build_url}>here</a> for detail"
+            time_str = time.strftime("%Y-%m-%d %X", time.localtime())
+            title = f"[{self.branch}]构建失败  {time_str}"
+            self.gitee.add_issue_to_repo(title=title, body=issue_msg)
+
+    @staticmethod
+    def rm_manifest_file(yocto_dir):
+        '''
+        rm manifest file from yocto-meta-openeuler/.oebuild/manifest.yaml
+        '''
+        manifest_path = os.path.join(yocto_dir, ".oebuild/manifest.yaml")
+        if not os.path.exists(manifest_path):
+            return
+        os.remove(manifest_path)
