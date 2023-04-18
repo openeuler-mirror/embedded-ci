@@ -37,7 +37,6 @@ class CI(Command):
     directory will be found
     '''
     def __init__(self):
-        self.cron_workspace = None
         self.workspace = os.path.join(os.environ['HOME'], 'oebuild_workspace')
         self.branch = None
         self.remote = None
@@ -52,7 +51,6 @@ Periodically build the corresponding release image according to the relevant con
 
     def do_add_parser(self,parser_addr: argparse._SubParsersAction):
         parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-s', '--share_dir', dest="share_dir")
         parser.add_argument('-b', '--branch', dest="branch", default="master")
         parser.add_argument('-e', '--remote_dst_dir', dest="remote_dst_dir")
         parser.add_argument('-i', '--remote_dst_ip', dest="remote_dst_ip")
@@ -70,11 +68,6 @@ Periodically build the corresponding release image according to the relevant con
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)
 
-        # cron workspace is to get sstate_cache when building
-        self.cron_workspace = os.path.join(
-                    args.share_dir,
-                    const.CRON_WORKSPACE,
-                    f"openeuler_{args.branch}")
         self.branch = args.branch
         # remote is to put local file to remote dir
         self.remote = Remote(
@@ -116,15 +109,6 @@ Periodically build the corresponding release image according to the relevant con
             repo=GITEE_YOCTO,
             remote_url=f"https://gitee.com/{GITEE_SPACE}/{GITEE_YOCTO}.git",
             depth=1)
-        yocto_dir = os.path.join(workspace_src_dir, GITEE_YOCTO)
-        oebuild_common_dir = os.path.join(yocto_dir, '.oebuild', 'common.yaml')
-        common_layer_list = util.parse_yaml(oebuild_common_dir)['repos']
-        for value in common_layer_list:
-            value_dir = os.path.join(self.cron_workspace, 'src', value)
-            if not os.path.exists(os.path.join(workspace_src_dir, value)):
-                if os.path.exists(value_dir):
-                    print(f"copy {value} from {value_dir} to {workspace_src_dir}")
-                    shutil.copytree(src=value_dir, dst = os.path.join(workspace_src_dir, value))
 
         # get cron config
         conf_dir = util.get_conf_path()
@@ -156,16 +140,33 @@ Periodically build the corresponding release image according to the relevant con
                     raise ValueError(result)
                 print(result)
 
-                from_sstate_dir = os.path.join(self.cron_workspace,
-                                               'build', 
-                                               board['directory'],
-                                               'sstate-cache')
-                if os.path.exists(from_sstate_dir):
-                    to_sstate_dir = os.path.join(self.workspace,
-                                                'build', 
-                                                board['directory'],
-                                                'sstate-cache')
-                    shutil.copytree(src=from_sstate_dir, dst=to_sstate_dir)
+                # download layer with manifest
+                yocto_dir = os.path.join(workspace_src_dir, GITEE_YOCTO)
+                compile_path = os.path.join(
+                    self.workspace,
+                    'build',
+                    board['directory'],
+                    'compile.yaml')
+                layer_list = util.parse_yaml(compile_path)['repos']
+                manifest_path = os.path.join(yocto_dir, '.oebuild/manifest.yaml')
+                if os.path.exists(manifest_path):
+                    manifest = util.parse_yaml(manifest_path)['manifest_list']
+                    for value in layer_list:
+                        if value in manifest:
+                            layer_repo = manifest[value]
+                            print(f"clone {value}")
+                            if os.path.exists(os.path.join(workspace_src_dir, value)):
+                                continue
+                            util.clone_repo_with_version_depth(
+                                src_dir = workspace_src_dir,
+                                repo_dir = value,
+                                remote_url = layer_repo['remote_url'],
+                                version = layer_repo['version'],
+                                depth = 1)
+
+                # add not_use_repos = true
+                key_value = 'not_use_repos: true'
+                self._add_content_to_file(file_path=compile_path, key_value=key_value)
 
                 # run `oebuild bitbake openeuler-image`
                 print(f"========================={board['directory']}==========================")
@@ -198,7 +199,7 @@ Periodically build the corresponding release image according to the relevant con
                 # because tmp directory use large space so support a param to delete it
                 # when build finished
                 tmp_dir = os.path.join(self.workspace, 'build', board['directory'], 'tmp')
-                if is_delete_tmp:
+                if is_delete_tmp and os.path.exists(tmp_dir):
                     shutil.rmtree(tmp_dir)
 
                 output_dir = os.path.join(self.workspace, 'build', board['directory'], 'output')
@@ -319,3 +320,11 @@ Periodically build the corresponding release image according to the relevant con
             time_str = time.strftime("%Y-%m-%d %X", time.localtime())
             title = f"[{self.branch}]构建失败  {time_str}"
             self.gitee.add_issue_to_repo(title=title, body=issue_msg)
+
+    def _add_content_to_file(self, file_path, key_value):
+        with open(file_path, 'r', encoding='utf-8') as r_f:
+            content = r_f.read()
+
+        content = key_value + "\n" + content
+        with open(file_path, 'w', encoding= 'utf-8') as w_f:
+            w_f.write(content)

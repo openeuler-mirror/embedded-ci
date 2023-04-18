@@ -70,12 +70,13 @@ class Cron(Command):
         if args.is_send_faild:
             self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
 
-        self.exec(workspace=workspace,
-                  branch=args.branch,
-                  cron_tmp_dir=args.tmp_dir,
-                  is_delete_tmp=args.is_delete_tmp)
+        self.exec(workspace = workspace,
+                  branch = args.branch,
+                  cron_tmp_dir = args.tmp_dir,
+                  is_delete_tmp = args.is_delete_tmp,
+                  is_send_faild = args.is_send_faild)
 
-    def exec(self, workspace, branch, cron_tmp_dir, is_delete_tmp):
+    def exec(self, workspace, branch, cron_tmp_dir, is_delete_tmp, is_send_faild):
         '''
         the exec will be called by gate
         '''
@@ -109,6 +110,7 @@ class Cron(Command):
         cron_conf = util.parse_yaml(os.path.join(conf_dir, const.CRON_CONF))
 
         err_list = []
+        build_faild_list = []
         # third run oebuild generate
         for arch in cron_conf['build_list']:
             # set gcc toolchain directory
@@ -162,6 +164,13 @@ class Cron(Command):
                             err_msg = rf"build {board['directory']}->{bitbake['target']} faild"
                             err_list.append(err_msg)
                             print(err_msg)
+                            build_faild = {
+                                'arch': arch['arch'],
+                                'directory': board['directory'],
+                                'generate': generate_cmd,
+                                'bitbake': bitbake['target']
+                            }
+                            build_faild_list.append(build_faild)
                         else:
                             print(f"bitbake {board['directory']}->{bitbake['target']} successful")
                 # because tmp directory use large space so support a param to delete it
@@ -174,6 +183,10 @@ class Cron(Command):
                 err_msg:str = err_msg
                 print(err_msg)
             raise ValueError("build project bas error")
+
+        # send build faild msg to issue
+        if is_send_faild:
+            self.send_issue_with_build_faild(build_faild_list)
 
     def _delete_build_cache(self, build_dir, board_conf):
         if not os.path.exists(build_dir):

@@ -89,6 +89,16 @@ def clone_repo_with_depth(src_dir, repo, remote_url, depth):
     os.chdir(src_dir)
     git.Repo.clone_from(url=remote_url, to_path=repo, depth = depth)
 
+def clone_repo_with_version_depth(src_dir, repo_dir, remote_url, version, depth):
+    '''
+    clone remote repo to local with depth
+    '''
+    os.chdir(src_dir)
+    repo = git.Repo.init(repo_dir)
+    remote = git.Remote.add(repo = repo, name = "origin", url = remote_url)
+    remote.fetch(version, depth = depth)
+    repo.git.checkout(version)
+
 def get_spec_ext(file, mod_name):
     '''
     get instance from mod name
