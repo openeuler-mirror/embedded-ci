@@ -13,8 +13,6 @@ See the Mulan PSL v2 for more details.
 GATE_CONF = "gate.yaml"
 CRON_CONF = "cron.yaml"
 CI_CONF = "ci.yaml"
-NATIVE_SDK_DIR= "/opt/buildtools/nativesdk"
-GCC_DIR = "/usr1/openeuler/gcc"
 CRON_WORKSPACE = "cron"
 GATE_WORKSPACE = "gate"
 CI_WORKSPACE = "ci"

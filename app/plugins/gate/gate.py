@@ -20,9 +20,9 @@ import json
 import yaml
 
 from app.command import Command
-from app import const
 from app.lib import Gitee, Jenkins, Result
 from app import util
+from app.build import Build,BuildRes,BuildParam
 
 class Gate(Command):
     '''
@@ -31,9 +31,11 @@ class Gate(Command):
     def __init__(self):
         self.jenkins = None
         self.gitee = None
-        self.gate_workspace = None
-        self.cron_workspace = None
-        self.workspace = os.path.join(os.environ['HOME'], 'oebuild_workspace')
+        self.workspace = "/home/jenkins/agent"
+        self.gate_share = None
+        self.share_dir = None
+        self.branch = None
+        self.pr_num = None
         self.repo = None
         self.remote_url = None
 
@@ -44,7 +46,7 @@ class Gate(Command):
 
     def do_add_parser(self,parser_addr: argparse._SubParsersAction):
         parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-s', '--share_dir', dest="share_dir")
+        parser.add_argument('-s', '--share_dir', dest = "share_dir")
         parser.add_argument('-o', '--owner', dest="owner")
         parser.add_argument('-p', '--repo', dest="repo")
         parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
@@ -52,59 +54,55 @@ class Gate(Command):
         parser.add_argument('-jpwd', '--jenkins_pwd', dest="jenkins_pwd")
         parser.add_argument('-b', '--branch', dest="branch", default="master")
         parser.add_argument('-pr', '--pr_num', dest="pr_num")
-        parser.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
+        parser.add_argument('-is_test', '--is_test', dest = "is_test", action = "store_true")
 
         return parser
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)
-        self.gate_workspace = os.path.join(args.share_dir, "gate")
-        if not os.path.exists(self.gate_workspace):
-            os.makedirs(self.gate_workspace)
-
-        self.cron_workspace = os.path.join(
-            args.share_dir,
-            const.CRON_WORKSPACE,
-            f"openeuler_{args.branch}")
+        self.gate_share = os.path.join(args.share_dir, "gate")
+        self.share_dir = args.share_dir
+        self.branch = args.branch
+        self.pr_num = args.pr_num
 
         self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
-        self.jenkins = Jenkins(jenkins_user=args.jenkins_user, jenkins_token=args.jenkins_pwd)
+        if not args.is_test:
+            self.jenkins = Jenkins(jenkins_user=args.jenkins_user, jenkins_token=args.jenkins_pwd)
         self.repo = args.repo
         self.remote_url = f"https://gitee.com/{args.owner}/{args.repo}.git"
 
-        self.exec(owner=args.owner, pr_num=args.pr_num, is_delete_tmp = args.is_delete_tmp)
+        self.exec(owner=args.owner, pr_num=args.pr_num, is_test=args.is_test)
 
-    def send_build_link(self, pr_num):
+    def send_build_link(self, pr_num, is_test:bool):
         '''
         sending user the build link
         '''
-        build_url = os.path.join(os.environ['BUILD_URL'], 'console')
-        comment = f"the gate is running, if you want to get message immediately, please click <a href={build_url}>here</a> for detail"
+        build_url = ""
+        if not is_test:
+            build_url = os.path.join(os.environ['BUILD_URL'], 'console')
+        comment = f"the gate is running, if you want to get message immediately, please click <a href='{build_url}'>here</a> for detail"
         self.gitee.comment_pr(pr_num=pr_num, comment=comment)
 
-
-    def exec(self,owner,pr_num,is_delete_tmp):
+    def exec(self,owner,pr_num,is_test):
         '''
         the exec will be called by gate
         '''
         # first deal pre job
-        self.delete_pre_jenkins(
-            job_name=os.environ['JOB_NAME'],
-            build_num=os.environ['BUILD_NUMBER'],
-            owner=owner,
-            pr_num=pr_num)
+        if not is_test:
+            self.delete_pre_jenkins(
+                repo = self.repo,
+                job_name = os.environ['JOB_NAME'],
+                build_num = os.environ['BUILD_NUMBER'],
+                owner = owner,
+                pr_num = pr_num)
         # check pull request if docs
         if self.check_docs(pr_num=pr_num):
             return
         # send user gate link when task is starting
-        self.send_build_link(pr_num=pr_num)
+        self.send_build_link(pr_num=pr_num, is_test=is_test)
         # delete ci_progress tag in gitee
         self.gitee.delete_tags_of_pr(pr_num, "ci_successful", "ci_faild")
         self.gitee.add_tags_of_pr(pr_num, 'ci_processing')
-
-        # jenkins some times will be reset bug it do not clear cache
-        if not os.path.exists(self.workspace):
-            os.makedirs(self.workspace)
 
         # first get pr commit list, and then clone pr with depth = len(commit)
         commit_data = self.gitee.get_pr_commits(pr_num=pr_num)
@@ -115,12 +113,12 @@ class Gate(Command):
         if os.path.exists(os.path.join(self.workspace, self.repo)):
             shutil.rmtree(os.path.join(self.workspace, self.repo))
         util.clone_repo_with_pr(
-            src_dir=os.environ['HOME'],
+            src_dir=self.workspace,
             repo=self.repo,
             remote_url=self.remote_url,
             pr_num=pr_num,
             depth=len(commit_hash_list))
-        repo_dir = os.path.join(os.environ['HOME'], self.repo)
+        repo_dir = os.path.join(self.workspace, self.repo)
         print(f"=============clone with pr {pr_num} finished===========================")
 
         # clone repo
@@ -129,10 +127,10 @@ class Gate(Command):
         print("======================code check finished================================")
 
         print("======================execute build check================================")
-        build_res = self.build_check(repo_dir=repo_dir,is_delete_tmp=is_delete_tmp)
+        build_res = self.build_check(repo_dir=repo_dir)
         print("======================build check finished================================")
 
-        self.send_result(pr_num=pr_num, code_check_list=code_check_res, build_check_list=build_res)
+        self.send_result(pr_num=pr_num, code_check_list=code_check_res, build_check_list=build_res, is_test=is_test)
 
     def code_check(self,repo_dir, commit_hash_list):
         '''
@@ -141,14 +139,20 @@ class Gate(Command):
         code = Code(repo_dir=repo_dir)
         return code.exec(commit_hash_list=commit_hash_list)
 
-    def build_check(self, repo_dir, is_delete_tmp):
+    def build_check(self, repo_dir):
         '''
         execute build check and return result
         '''
-        build = Build(cron_workspace=self.cron_workspace, workspace=self.workspace)
-        return build.exec(repo_dir=repo_dir,is_delete_tmp=is_delete_tmp)
+        gate_repo_path = os.path.join(util.get_top_path(), f"app/gate/{self.repo}/run.py")
+        cls:Build = util.get_spec_ext(gate_repo_path, "Run")
+        return cls.build(param=BuildParam(
+            repo_dir=repo_dir,
+            workspace=self.workspace,
+            share_dir=self.share_dir,
+            branch=self.branch,
+            pr_num=self.pr_num))
 
-    def send_result(self, pr_num, code_check_list, build_check_list):
+    def send_result(self, pr_num, code_check_list, build_check_list:BuildRes, is_test: bool):
         '''
         format result to html table and send to gitee comment
         '''
@@ -162,17 +166,17 @@ class Gate(Command):
                     <strong>{Result().get_hint(code['result'])}</strong>"
             return format_code_check, final_res
 
-        def format_build_check_list(build_check_list):
+        def format_build_check_list(build_check_list:BuildRes):
             format_build_check = {}
             final_res = Result().success
-            for arch in build_check_list:
+            for arch in build_check_list.archs:
                 arch_res = {}
-                for build in arch.get('build_list', {}):
-                    if build['result'] is Result().faild:
+                for build in arch.boards:
+                    if build.result is Result().faild:
                         final_res = Result().faild
-                    arch_res[build['name']] = f"{Result().get_emoji(build['result'])}\
-                        <strong>{Result().get_hint(build['result'])}</strong>"
-                format_build_check[arch['arch']] = arch_res
+                    arch_res[build.name] = f"{Result().get_emoji(build.result)}\
+                        <strong>{Result().get_hint(build.result)}</strong>"
+                format_build_check[arch.name] = arch_res
             return format_build_check, final_res
 
         format_code_check, code_check_res = format_code_check_list(code_check_list)
@@ -190,8 +194,10 @@ class Gate(Command):
         comment = util.json_to_html(comment)
         # add an access link after comment table
         comment = comment + "\n"
-        build_url = os.path.join(os.environ['BUILD_URL'], 'console')
-        comment = comment + f"Please click <a href={build_url}>here</a> for details"
+        build_url = ""
+        if not is_test:
+            build_url = os.path.join(os.environ['BUILD_URL'], 'console')
+        comment = comment + f"Please click <a href='{build_url}'>here</a> for details"
         self.gitee.comment_pr(pr_num=pr_num, comment=comment)
 
         # send check result tag to gitee
@@ -221,11 +227,11 @@ class Gate(Command):
             comment="This pull request only submits documentation, so no builds will take place")
         return True
 
-    def delete_pre_jenkins(self, job_name, build_num, owner, pr_num):
+    def delete_pre_jenkins(self, repo, job_name, build_num, owner, pr_num):
         '''
         delete jenkins job when exists
         '''
-        pr_dir = os.path.join(os.path.dirname(self.gate_workspace), owner, 'pr_num')
+        pr_dir = os.path.join(self.gate_share, repo, owner, 'pr_num')
         if not os.path.exists(pr_dir):
             os.makedirs(pr_dir)
         pr_file = os.path.join(pr_dir, str(pr_num))
@@ -306,106 +312,3 @@ the folowint commits do not conform to the specifications:
             print("check result: \n\r %s", check_res['result'])
             print("==============================================================")
         return Result().faild
-
-class Build:
-    '''
-    the build will be builded by trigger config
-    '''
-    def __init__(self, cron_workspace, workspace):
-        self.cron_workspace = cron_workspace
-        self.workspace = workspace
-
-    def exec(self, repo_dir, is_delete_tmp):
-        '''
-        execute build task
-        '''
-        # because oebuild_worksapce directory will be initialize by oebuild,
-        # so if exists and delete it
-        if os.path.exists(self.workspace):
-            shutil.rmtree(self.workspace)
-
-        # execute oebuild init and move repo to oebuild_workspace's src directory
-        os.chdir(os.path.dirname(self.workspace))
-        err_code, result = subprocess.getstatusoutput(
-            f"oebuild init {os.path.basename(self.workspace)}")
-        if err_code != 0:
-            raise ValueError(result)
-        print(result)
-        oebuild_src_dir = os.path.join(self.workspace, 'src')
-        shutil.move(src = repo_dir, dst = os.path.join(oebuild_src_dir, os.path.basename(repo_dir)))
-
-        # copy base layer from cron workspace
-        repo_dir = os.path.join(oebuild_src_dir, os.path.basename(repo_dir))
-        oebuild_common_dir = os.path.join(repo_dir, '.oebuild', 'common.yaml')
-        common_layer_list = util.parse_yaml(oebuild_common_dir)['repos']
-        for value in common_layer_list:
-            value_dir = os.path.join(self.cron_workspace, 'src', value)
-            if not os.path.exists(os.path.join(oebuild_src_dir, value)):
-                shutil.copytree(src=value_dir, dst = os.path.join(oebuild_src_dir, value))
-
-        # param trigger conf
-        conf_dir = util.get_conf_path()
-        gate_conf = util.parse_yaml(os.path.join(conf_dir, const.GATE_CONF))
-
-        build_check_list = []
-        for arch in gate_conf['build_check']:
-            toolchain_dir = os.path.join(const.GCC_DIR, arch['toolchain'])
-            build_image = []
-            for board in arch['board']:
-                os.chdir(self.workspace)
-                err_code, result = subprocess.getstatusoutput(f"oebuild generate\
-                                    -p {board['platform']}\
-                                    -n {const.NATIVE_SDK_DIR}\
-                                    -t {toolchain_dir}\
-                                    -b_in host\
-                                    -d {board['directory']}")
-                if err_code != 0:
-                    raise ValueError(result)
-                print(result)
-
-                # copy cron sstate-cache to trigger workspace' build directory
-                from_sstate_dir = os.path.join(self.cron_workspace,
-                                               'build', 
-                                               board['directory'],
-                                               'sstate-cache')
-                if os.path.exists(from_sstate_dir):
-                    to_sstate_dir = os.path.join(self.workspace,
-                                                'build', 
-                                                board['directory'],
-                                                'sstate-cache')
-                    print(f"copy sstate-cache to {to_sstate_dir}")
-                    shutil.copytree(src=from_sstate_dir, dst=to_sstate_dir)
-
-                for image in board['image']:
-                    # run `oebuild bitbake openeuler-image`
-                    with subprocess.Popen(
-                                f"oebuild bitbake {image['name']}",
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                cwd=os.path.join(self.workspace, 'build', board['directory']),
-                                encoding="utf-8") as s_p:
-                        last_line = ""
-                        for line in s_p.stdout:
-                            line = line.strip('\n')
-                            last_line = line
-                            print(line)
-                        s_p.wait()
-
-                        if last_line.find("returning a non-zero exit code.") != -1:
-                            build_res = Result().faild
-                        else:
-                            build_res = Result().success
-
-                        build_image.append({
-                            'name': f"{image['name']}({board['name']})",
-                            "result": build_res})
-                # because tmp directory use large space so support a param to delete it
-                # when build finished
-                tmp_dir = os.path.join(self.workspace, 'build', board['directory'], 'tmp')
-                if is_delete_tmp and os.path.exists(tmp_dir):
-                    shutil.rmtree(tmp_dir)
-
-            build_check_list.append({'arch': arch['arch'], 'build_list': build_image})
-
-        return build_check_list
