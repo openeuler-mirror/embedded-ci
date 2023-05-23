@@ -101,7 +101,7 @@ class Gate(Command):
         # send user gate link when task is starting
         self.send_build_link(pr_num=pr_num, is_test=is_test)
         # delete ci_progress tag in gitee
-        self.gitee.delete_tags_of_pr(pr_num, "ci_successful", "ci_faild")
+        self.gitee.delete_tags_of_pr(pr_num, "ci_successful", "ci_failed")
         self.gitee.add_tags_of_pr(pr_num, 'ci_processing')
 
         # first get pr commit list, and then clone pr with depth = len(commit)
