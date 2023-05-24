@@ -26,6 +26,8 @@ from app import const
 
 GITEE_YOCTO = "yocto-meta-openeuler"
 GITEE_SPACE = "openeuler"
+NATIVE_SDK_DIR= "/opt/buildtools/nativesdk"
+GCC_DIR = "/usr1/openeuler/gcc"
 
 class CI(Command):
     '''
@@ -118,7 +120,7 @@ Periodically build the corresponding release image according to the relevant con
         # third run oebuild generate
         for arch in ci_conf['build_list']:
             # set gcc toolchain directory
-            toolchain_dir = os.path.join(const.GCC_DIR, arch['toolchain'])
+            toolchain_dir = os.path.join(GCC_DIR, arch['toolchain'])
             for board in arch['board']:
                 features = None
                 if "feature" in board and board['feature'] is not None and len(board['feature']) > 0:
@@ -128,7 +130,7 @@ Periodically build the corresponding release image according to the relevant con
                 # run `oebuild generate` for compile.yaml
                 generate_cmd = f"oebuild generate\
                             -p {board['platform']}\
-                            -n {const.NATIVE_SDK_DIR}\
+                            -n {NATIVE_SDK_DIR}\
                             -t {toolchain_dir}\
                             -b_in host\
                             -dt \

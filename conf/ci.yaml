@@ -2,6 +2,7 @@ build_list:
   - arch: aarch64
     toolchain: openeuler_gcc_arm64le
     board: 
+##########################################
     - name: qemu 
       platform: aarch64-std
       directory: aarch64-qemu
@@ -10,6 +11,7 @@ build_list:
       bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
     - name: qemu-ros 
       platform: aarch64-std
       directory: aarch64-qemu-ros
@@ -17,12 +19,14 @@ build_list:
       - name: openeuler-ros
       bitbake:
       - target: openeuler-image-ros
+##########################################
     - name: raspberrypi4-64 
       platform: raspberrypi4-64
       directory: raspberrypi4-64
       bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
     - name: raspberrypi4-64-rt
       platform: raspberrypi4-64
       directory: raspberrypi4-64-rt
@@ -31,14 +35,26 @@ build_list:
       bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
     - name: raspberrypi4-64-ros
       platform: raspberrypi4-64
       directory: raspberrypi4-64-ros
       feature: 
       - name: openeuler-ros
       bitbake:
+      - target: openeuler-image-ros
+      - target: openeuler-image-ros -c do_populate_sdk
+##########################################
+    - name: raspberrypi4-64-qt
+      platform: raspberrypi4-64
+      directory: raspberrypi4-64-qt
+      feature: 
+      - name: openeuler-qt
+      - name: systemd
+      bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
   - arch: arm32
     toolchain: openeuler_gcc_arm32le
     board: 
@@ -48,6 +64,7 @@ build_list:
       bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
   - arch: x86-64
     toolchain: openeuler_gcc_x86_64
     board: 
@@ -57,6 +74,7 @@ build_list:
       bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
     - name: qemu-rt
       platform: x86-64-std
       directory: x86-64-rt
@@ -65,6 +83,7 @@ build_list:
       bitbake:
       - target: openeuler-image
       - target: openeuler-image -c do_populate_sdk
+##########################################
   - arch: riscv64
     toolchain: openeuler_gcc_riscv64
     board: 
