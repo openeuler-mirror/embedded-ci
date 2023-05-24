@@ -90,9 +90,9 @@ class Run(Build):
                         s_p.wait()
 
                         if last_line.find("returning a non-zero exit code.") != -1:
-                            build_res = Result.faild
+                            build_res = Result().faild
                         else:
-                            build_res = Result.success
+                            build_res = Result().success
                         board_res.append(Board(name=f"{image['name']}({board['name']})", result=build_res))
                 # because tmp directory use large space so support a param to delete it
                 # when build finished
