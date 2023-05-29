@@ -170,6 +170,14 @@ Periodically build the corresponding release image according to the relevant con
                 key_value = 'not_use_repos: true'
                 self._add_content_to_file(file_path=compile_path, key_value=key_value)
 
+                # add rm_work in case avoid large cache causes the disk to fill up when building
+                compile_conf = util.parse_yaml(compile_path)
+                local_conf = compile_conf['local_conf']
+                local_conf += '\nINHERIT += "rm_work"\n'
+                local_conf += 'RM_WORK_EXCLUDE += "glog"\n'
+                compile_conf['local_conf'] = local_conf
+                util.write_yaml(compile_path, compile_conf)
+
                 # run `oebuild bitbake openeuler-image`
                 print(f"========================={board['directory']}==========================")
                 for bitbake in board['bitbake']:
