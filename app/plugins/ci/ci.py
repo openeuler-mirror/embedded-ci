@@ -26,6 +26,8 @@ from app import const
 
 GITEE_YOCTO = "yocto-meta-openeuler"
 GITEE_SPACE = "openeuler"
+NATIVE_SDK_DIR= "/opt/buildtools/nativesdk"
+GCC_DIR = "/usr1/openeuler/gcc"
 
 class CI(Command):
     '''
@@ -118,7 +120,7 @@ Periodically build the corresponding release image according to the relevant con
         # third run oebuild generate
         for arch in ci_conf['build_list']:
             # set gcc toolchain directory
-            toolchain_dir = os.path.join(const.GCC_DIR, arch['toolchain'])
+            toolchain_dir = os.path.join(GCC_DIR, arch['toolchain'])
             for board in arch['board']:
                 features = None
                 if "feature" in board and board['feature'] is not None and len(board['feature']) > 0:
@@ -128,7 +130,7 @@ Periodically build the corresponding release image according to the relevant con
                 # run `oebuild generate` for compile.yaml
                 generate_cmd = f"oebuild generate\
                             -p {board['platform']}\
-                            -n {const.NATIVE_SDK_DIR}\
+                            -n {NATIVE_SDK_DIR}\
                             -t {toolchain_dir}\
                             -b_in host\
                             -dt \
@@ -167,6 +169,14 @@ Periodically build the corresponding release image according to the relevant con
                 # add not_use_repos = true
                 key_value = 'not_use_repos: true'
                 self._add_content_to_file(file_path=compile_path, key_value=key_value)
+
+                # add rm_work in case avoid large cache causes the disk to fill up when building
+                compile_conf = util.parse_yaml(compile_path)
+                local_conf = compile_conf['local_conf']
+                local_conf += '\nINHERIT += "rm_work"\n'
+                local_conf += 'RM_WORK_EXCLUDE += "glog"\n'
+                compile_conf['local_conf'] = local_conf
+                util.write_yaml(compile_path, compile_conf)
 
                 # run `oebuild bitbake openeuler-image`
                 print(f"========================={board['directory']}==========================")

@@ -18,6 +18,7 @@ import random
 
 import yaml
 import git
+
 from json2table import convert
 
 def check_oebuild_directory(o_dir: str):
@@ -39,6 +40,13 @@ def parse_yaml(yaml_dir):
     with open(yaml_dir, 'r', encoding='utf-8') as r_f:
         data = yaml.load(r_f.read(), yaml.Loader)
         return data
+
+def write_yaml(yaml_dir, data):
+    '''
+    write data to yaml file
+    '''
+    with open(yaml_dir, 'w', encoding='utf-8') as w_f:
+        yaml.dump(data, w_f)
 
 def get_common_conf():
     '''
