@@ -95,9 +95,6 @@ class Gate(Command):
                 build_num = os.environ['BUILD_NUMBER'],
                 owner = owner,
                 pr_num = pr_num)
-        # check pull request if docs
-        if self.check_docs(pr_num=pr_num):
-            return
         # send user gate link when task is starting
         self.send_build_link(pr_num=pr_num, is_test=is_test)
         # delete ci_progress tag in gitee
@@ -121,27 +118,60 @@ class Gate(Command):
         repo_dir = os.path.join(self.workspace, self.repo)
         print(f"=============clone with pr {pr_num} finished===========================")
 
+        
+        #determine whether to ask for document build
+        commits_files_data = self.gitee.get_commits_files(pr_num)
+        commit_files_list = json.loads(commits_files_data)
         # clone repo
         print("======================execute code check================================")
-        code_check_res = self.code_check(repo_dir = repo_dir,commit_hash_list = commit_hash_list)
+        code_check_res = self.code_check(repo_dir = repo_dir,commit_hash_list = commit_hash_list,commit_files_list = commit_files_list)
         print("======================code check finished================================")
 
-        print("======================execute build check================================")
-        build_res = self.build_check(repo_dir=repo_dir)
-        print("======================build check finished================================")
+        doc_res = []
+        build_res = []
+        # check pull request if docs
+        if self.is_docs_build(commit_files_list=commit_files_list):
+            print("======================execute doc check================================")
+            doc_res = self.doc_build_check(repo_dir=repo_dir)
+            print("======================doc check finished================================")
+        else:
+            print("======================execute build check================================")
+            build_res = self.code_build_check(repo_dir=repo_dir)
+            print("======================build check finished================================")
 
-        self.send_result(pr_num=pr_num, code_check_list=code_check_res, build_check_list=build_res, is_test=is_test)
+        self.send_result(pr_num=pr_num, code_check_list=code_check_res, doc_check_list=doc_res, build_check_list=build_res, is_test=is_test)
 
-    def code_check(self,repo_dir, commit_hash_list):
+    def code_check(self,repo_dir, commit_hash_list,commit_files_list):
         '''
         execute code check and return result
         '''
         code = Code(repo_dir=repo_dir)
-        return code.exec(commit_hash_list=commit_hash_list)
+        return code.exec(commit_hash_list=commit_hash_list,commit_files_list=commit_files_list)
 
-    def build_check(self, repo_dir):
+    def doc_build_check(self,repo_dir):
         '''
-        execute build check and return result
+        execute doc build check and return result
+        '''
+        doc_build_res = []
+        os.chdir(repo_dir+'/docs')
+        doc_build_result = subprocess.run(['sphinx-multiversion', 'source','build/html'], capture_output=True, text=True)
+        if doc_build_result.returncode == 0:
+            doc_build_res.append({
+                'name': 'doc_build_check',
+                'result': Result().success
+            })
+            print(doc_build_result.stdout)
+        else:
+            doc_build_res.append({
+                'name': 'doc_build_check',
+                'result': Result().faild
+            })
+            print('============文档构建失败，错误信息：============\n' + doc_build_result.stderr + "\n============================================")
+        return doc_build_res
+
+    def code_build_check(self, repo_dir):
+        '''
+        execute code build check and return result
         '''
         gate_repo_path = os.path.join(util.get_top_path(), f"app/gate/{self.repo}/run.py")
         cls:Build = util.get_spec_ext(gate_repo_path, "Run")
@@ -152,18 +182,18 @@ class Gate(Command):
             branch=self.branch,
             pr_num=self.pr_num))
 
-    def send_result(self, pr_num, code_check_list, build_check_list:BuildRes, is_test: bool):
+    def send_result(self, pr_num, code_check_list, doc_check_list, build_check_list:BuildRes, is_test: bool):
         '''
         format result to html table and send to gitee comment
         '''
         def format_code_check_list(code_check_list):
             format_code_check = {}
             final_res = Result().success
-            for code in code_check_list:
-                if code['result'] is Result().faild:
+            for check_list in code_check_list:
+                if check_list['result'] is Result().faild:
                     final_res = Result().faild
-                format_code_check[code['name']] = f"{Result().get_emoji(code['result'])}\
-                    <strong>{Result().get_hint(code['result'])}</strong>"
+                format_code_check[check_list['name']] = f"{Result().get_emoji(check_list['result'])}\
+                    <strong>{Result().get_hint(check_list['result'])}</strong>"
             return format_code_check, final_res
 
         def format_build_check_list(build_check_list:BuildRes):
@@ -181,16 +211,27 @@ class Gate(Command):
 
         format_code_check, code_check_res = format_code_check_list(code_check_list)
         print(f"code_check: {format_code_check}, code_res: {code_check_res}")
-        format_build_check, build_check_res = format_build_check_list(build_check_list)
-        print(f"build_check: {format_build_check}, build_res: {build_check_res}")
-        final_res = code_check_res or build_check_res
+        #determine whether this build is related to the doc or code by determining whether the 'doc_check_list' is empty
+        if len(doc_check_list) > 0:
+            format_doc_check, doc_check_res = format_code_check_list(doc_check_list)
+            print(f"doc_check: {format_doc_check}, doc_res: {doc_check_res}")
+            final_res = code_check_res or doc_check_res
+        else:
+            format_build_check, build_check_res = format_build_check_list(build_check_list)
+            print(f"build_check: {format_build_check}, build_res: {build_check_res}")
+            final_res = code_check_res or build_check_res
+        
 
 
         comment = {"<strong>check name</strong>": "<strong>result</strong>"}
         for key, value in format_code_check.items():
             comment[key] = value
-        for key, value in format_build_check.items():
-            comment[key] = value
+        if len(doc_check_list) > 0:
+            for key, value in format_doc_check.items():
+                comment[key] = value
+        else:
+            for key, value in format_build_check.items():
+                comment[key] = value
         comment = util.json_to_html(comment)
         # add an access link after comment table
         comment = comment + "\n"
@@ -213,18 +254,13 @@ class Gate(Command):
             hash_list.append(commit['sha'])
         return hash_list
 
-    def check_docs(self, pr_num):
+    def is_docs_build(self, commit_files_list :list):
         '''
-        xxx
+        determine whether to ask for document build
         '''
-        commits_files_data = self.gitee.get_commits_files(pr_num)
-        commit_files_list = json.loads(commits_files_data)
         for file_obj in commit_files_list:
             if not file_obj['filename'].startswith("docs"):
                 return False
-        self.gitee.comment_pr(
-            pr_num=pr_num,
-            comment="This pull request only submits documentation, so no builds will take place")
         return True
 
     def delete_pre_jenkins(self, repo, job_name, build_num, owner, pr_num):
@@ -265,11 +301,16 @@ class Code:
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
 
-    def exec(self, commit_hash_list: list):
+    def exec(self, commit_hash_list: list, commit_files_list: list):
         '''
         execute the code check
         '''
         code_res = []
+        # check commit scope
+        code_res.append({
+            'name': 'check_commit_scope',
+            'result': self.check_commit_scope(commit_files_list=commit_files_list)
+            })
         # check commit msg
         code_res.append({
             'name': 'check_commit_msg',
@@ -280,6 +321,35 @@ class Code:
 
     def _get_gitlint_dir(self):
         return os.path.join(util.get_conf_path(), '.gitlint')
+    
+    def check_commit_scope(self, commit_files_list):
+        '''
+        determine whether the submitted content is document or non document, and both cannot coexist in the same PR
+        '''
+        os.chdir(self.repo_dir)
+        path_list = []
+        for commit_files in commit_files_list:
+            #get the path of files that have been updated, added, or deleted
+            change_path = commit_files['filename'].split('\n')
+            path_list.extend(change_path)
+        doc_path_list = [file_path for file_path in path_list if file_path.startswith('docs/')]
+        non_doc_path_list = [file_path for file_path in path_list if not file_path.startswith('docs/')]
+        print(path_list)
+        if len(doc_path_list) > 0 and len(non_doc_path_list) > 0:
+            print("In a pull request, submissions cannot include both document and non-document content at the same time.")
+            print("==============================================================")
+            print("doc paths:")
+            for doc_path in doc_path_list:
+                print("     ", doc_path)
+            print("non doc paths:")
+            for non_doc_path in non_doc_path_list:
+                print("     ", non_doc_path)
+            print("==============================================================")
+            return Result().faild
+        if len(doc_path_list) == 0 and len(non_doc_path_list) == 0:
+            print("In a pull request, no files have been deleted, added, or modified. Please commit something.")
+            return Result().faild
+        return Result().success 
 
     def check_commit_msg(self, commit_hash_list):
         '''
@@ -308,7 +378,7 @@ the folowint commits do not conform to the specifications:
         print(log_format)
         print("==============================================================")
         for check_res in res:
-            print("commit: %s", check_res['commit'])
-            print("check result: \n\r %s", check_res['result'])
+            print("commit:", check_res['commit'])
+            print("check result: \n\r ", check_res['result'])
             print("==============================================================")
         return Result().faild
