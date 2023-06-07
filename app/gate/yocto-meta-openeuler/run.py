@@ -43,16 +43,6 @@ class Run(Build):
             src = param.repo_dir,
             dst = os.path.join(oebuild_src_dir, os.path.basename(param.repo_dir)))
 
-        os.chdir(oebuild_workspace)
-        # copy base layer from cron workspace
-        oebuild_common_dir = os.path.join(oebuild_src_dir, os.path.basename(param.repo_dir), '.oebuild', 'common.yaml')
-        common_layer_list = util.parse_yaml(oebuild_common_dir)['repos']
-        cron_workspace = os.path.join(param.share_dir, "cron", f"openeuler_{param.branch}")
-        for value in common_layer_list:
-            value_dir = os.path.join(cron_workspace, 'src', value)
-            if not os.path.exists(os.path.join(oebuild_src_dir, value)):
-                shutil.copytree(src=value_dir, dst = os.path.join(oebuild_src_dir, value))
-
         # param trigger conf
         gate_path = os.path.join(os.path.dirname(__file__), "build.yaml")
         gate_conf = util.parse_yaml(gate_path)
@@ -73,6 +63,30 @@ class Run(Build):
                     raise ValueError(result)
                 print(result)
 
+                # download layer with manifest
+                yocto_dir = os.path.join(oebuild_src_dir, os.path.basename(param.repo_dir))
+                compile_path = os.path.join(
+                    oebuild_workspace,
+                    'build',
+                    board['directory'],
+                    'compile.yaml')
+                layer_list = util.parse_yaml(compile_path)['repos']
+                manifest_path = os.path.join(yocto_dir, '.oebuild/manifest.yaml')
+                if os.path.exists(manifest_path):
+                    manifest = util.parse_yaml(manifest_path)['manifest_list']
+                    for value in layer_list:
+                        if value in manifest:
+                            layer_repo = manifest[value]
+                            print(f"clone {value}")
+                            if os.path.exists(os.path.join(oebuild_src_dir, value)):
+                                continue
+                            util.clone_repo_with_version_depth(
+                                src_dir = oebuild_src_dir,
+                                repo_dir = value,
+                                remote_url = layer_repo['remote_url'],
+                                version = layer_repo['version'],
+                                depth = 1)
+
                 for image in board['image']:
                     # run `oebuild bitbake openeuler-image`
                     with subprocess.Popen(
@@ -83,6 +97,10 @@ class Run(Build):
                                 cwd=os.path.join(oebuild_workspace, 'build', board['directory']),
                                 encoding="utf-8") as s_p:
                         last_line = ""
+                        for line in s_p.stderr:
+                            line = line.strip('\n')
+                            last_line = line
+                            print(line)
                         for line in s_p.stdout:
                             line = line.strip('\n')
                             last_line = line

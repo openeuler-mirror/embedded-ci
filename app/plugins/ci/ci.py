@@ -110,8 +110,9 @@ Periodically build the corresponding release image according to the relevant con
             src_dir=workspace_src_dir,
             repo=GITEE_YOCTO,
             remote_url=f"https://gitee.com/{GITEE_SPACE}/{GITEE_YOCTO}.git",
+            branch=self.branch,
             depth=1)
-
+ 
         # get cron config
         conf_dir = util.get_conf_path()
         ci_conf = util.parse_yaml(os.path.join(conf_dir, const.CI_CONF))

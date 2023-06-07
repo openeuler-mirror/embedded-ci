@@ -31,6 +31,7 @@ class Run(Build):
                 src_dir=param.workspace,
                 repo=libbound_repo,
                 remote_url=libbound_repo_remote,
+                branch="master",
                 depth=1)
         gate_path = os.path.join(os.path.dirname(__file__), "build.yaml")
         gate_conf = util.parse_yaml(gate_path)
