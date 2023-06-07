@@ -280,15 +280,18 @@ class Gate(Command):
                 # stop pre jenkins job
                 pr_json = yaml.load(pr_data, yaml.Loader)
                 if "job_name" in pr_json and "build_num" in pr_json:
-                    pre_build_info = self.jenkins.get_build_info(
-                        job_name=pr_json['job_name'],
-                        build_num=pr_json['build_num'])
-                    if 'building' in pre_build_info and pre_build_info['building']:
-                        comment = "you retrigger the gatekeeper, the previous access task will stop and then restart the new access mission"
-                        self.gitee.comment_pr(pr_num=pr_num, comment=comment)
-                        self.jenkins.stop_build_by_build_num(
+                    try:
+                        pre_build_info = self.jenkins.get_build_info(
                             job_name=pr_json['job_name'],
                             build_num=pr_json['build_num'])
+                        if 'building' in pre_build_info and pre_build_info['building']:
+                            comment = "you retrigger the gatekeeper, the previous access task will stop and then restart the new access mission"
+                            self.gitee.comment_pr(pr_num=pr_num, comment=comment)
+                            self.jenkins.stop_build_by_build_num(
+                                job_name=pr_json['job_name'],
+                                build_num=pr_json['build_num'])
+                    except:
+                        pass
             with open(pr_file, 'w', encoding='utf-8') as w_f:
                 pr_data = {"job_name": job_name, 'build_num': build_num}
                 yaml.dump(pr_data, w_f)
@@ -334,7 +337,6 @@ class Code:
             path_list.extend(change_path)
         doc_path_list = [file_path for file_path in path_list if file_path.startswith('docs/')]
         non_doc_path_list = [file_path for file_path in path_list if not file_path.startswith('docs/')]
-        print(path_list)
         if len(doc_path_list) > 0 and len(non_doc_path_list) > 0:
             print("In a pull request, submissions cannot include both document and non-document content at the same time.")
             print("==============================================================")

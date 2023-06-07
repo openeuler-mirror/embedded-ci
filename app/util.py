@@ -90,12 +90,12 @@ def clone_repo_with_pr(src_dir, repo, remote_url, pr_num, depth):
     subprocess.getoutput(f'git fetch origin pull/{pr_num}/MERGE:pr_{pr_num} --depth={depth}')
     subprocess.getoutput(f'git checkout pr_{pr_num}')
 
-def clone_repo_with_depth(src_dir, repo, remote_url, depth):
+def clone_repo_with_depth(src_dir, repo, remote_url, branch, depth):
     '''
     clone remote repo to local with depth
     '''
     os.chdir(src_dir)
-    git.Repo.clone_from(url=remote_url, to_path=repo, depth = depth)
+    git.Repo.clone_from(url=remote_url, to_path=repo, branch = branch, depth = depth)
 
 def clone_repo_with_version_depth(src_dir, repo_dir, remote_url, version, depth):
     '''
