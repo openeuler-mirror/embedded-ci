@@ -11,3 +11,6 @@ plugins:
 - name: otest
   class: OTest
   path: plugins/otest/otest.py
+- name: releasedoc
+  class: ReleaseDoc
+  path: plugins/release_doc/release_doc.py
