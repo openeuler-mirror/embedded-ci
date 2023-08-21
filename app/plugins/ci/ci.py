@@ -175,8 +175,7 @@ Periodically build the corresponding release image according to the relevant con
                 compile_conf = util.parse_yaml(compile_path)
                 local_conf = compile_conf['local_conf']
                 local_conf += '\nINHERIT += "rm_work"\n'
-                local_conf += 'RM_WORK_EXCLUDE += "glog"\n'
-                local_conf += 'RM_WORK_EXCLUDE += "libflann"\n'
+                local_conf += 'RM_WORK_EXCLUDE += "glog libflann"\n'
                 compile_conf['local_conf'] = local_conf
                 util.write_yaml(compile_path, compile_conf)
 
