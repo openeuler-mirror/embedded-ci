@@ -39,12 +39,20 @@ class Run(Build):
             raise ValueError(result)
         print(result)
         oebuild_src_dir = os.path.join(oebuild_workspace, 'src')
+        yocto_in_src_path = os.path.join(oebuild_src_dir, os.path.basename(param.repo_dir))
         shutil.move(
             src = param.repo_dir,
-            dst = os.path.join(oebuild_src_dir, os.path.basename(param.repo_dir)))
+            dst = yocto_in_src_path)
 
         # param trigger conf
-        gate_path = os.path.join(os.path.dirname(__file__), "build.yaml")
+        build_path_in_oe = os.path.join(yocto_in_src_path,".oebuild/workflows/gate.yaml")
+        build_path_in_ci = os.path.join(os.path.dirname(__file__), "build.yaml")
+        # if yocto-meta-openeuler have a build config for gate in workflow directory, use it;
+        # otherwise, use the build config for gate in embedded-ci
+        if os.path.exists(build_path_in_oe):
+            gate_path = build_path_in_oe
+        else:
+            gate_path = build_path_in_ci
         gate_conf = util.parse_yaml(gate_path)
 
         arch_res = []

@@ -112,10 +112,17 @@ Periodically build the corresponding release image according to the relevant con
             remote_url=f"https://gitee.com/{GITEE_SPACE}/{GITEE_YOCTO}.git",
             branch=self.branch,
             depth=1)
- 
+
         # get cron config
-        conf_dir = util.get_conf_path()
-        ci_conf = util.parse_yaml(os.path.join(conf_dir, const.CI_CONF))
+        # if yocto-meta-openeuler have a build config for ci in workflow directory, use it;
+        # otherwise, use the build config for ci in embedded-ci
+        build_path_in_oe = os.path.join(workspace_src_dir,GITEE_YOCTO,".oebuild/workflows/ci.yaml")
+        build_path_in_ci = os.path.join(util.get_conf_path(), const.CI_CONF)
+        if os.path.exists(build_path_in_oe):
+            ci_conf_path = build_path_in_oe
+        else:
+            ci_conf_path = build_path_in_ci
+        ci_conf = util.parse_yaml(ci_conf_path)
 
         build_faild_list = []
         # third run oebuild generate
