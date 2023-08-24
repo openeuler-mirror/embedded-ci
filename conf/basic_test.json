@@ -1,0 +1,42 @@
+{
+    "export": {
+        "DOWNLOAD_BRANCH":"{build_branch}"
+    },
+    "env": [
+        {
+            "type": "qemu",
+            "name": "qemu_1",
+            "kernal_img_path": "{zimage_path}",
+            "initrd_path": "{initrd_path}",
+            "option_wait_time": "180",
+            "login_wait_str": "{login_wait_str}",
+            "qemu_type": "{type}",
+            "cpu": "{cpu}",
+            "machine": "{machine}",
+            "sdk_path":"{sdk_path}",
+            "put_all":true
+        }
+    ],
+    "combination": [
+        {
+            "name": "normal_test",
+            "testcases": [
+                {
+                    "testsuite": "embedded_os_basic_test"
+                },
+                {
+                    "testsuite": "embedded_security_config_test"
+                },
+                {
+                    "testsuite": "embedded_application_develop_tests"
+                }
+            ]
+        }
+    ],
+    "execute":[
+        {
+            "env":["qemu_1"],
+            "combination":"normal_test"
+        }
+    ]
+}

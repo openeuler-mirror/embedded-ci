@@ -14,3 +14,6 @@ plugins:
 - name: releasedoc
   class: ReleaseDoc
   path: plugins/release_doc/release_doc.py
+- name: rtest
+  class: RTest
+  path: plugins/rtest/rtest.py
