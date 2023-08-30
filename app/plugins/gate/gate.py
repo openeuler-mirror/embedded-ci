@@ -359,9 +359,13 @@ class Code:
         '''
         os.chdir(self.repo_dir)
         res = []
+        if os.path.exists(os.path.join(self.repo_dir, ".gitlint")):
+            config_path = os.path.join(self.repo_dir, ".gitlint")
+        else:
+            config_path = self._get_gitlint_dir()
         for commit_hash in commit_hash_list:
             # get commit and add to dist for follow using
-            command = f"gitlint --commit {commit_hash} -C {self._get_gitlint_dir()}"
+            command = f"gitlint --commit {commit_hash} -C {config_path}"
             check_res = subprocess.getoutput(cmd=command)
             if check_res != "":
                 res.append({'commit': commit_hash, 'result': check_res})
