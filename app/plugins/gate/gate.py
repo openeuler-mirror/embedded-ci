@@ -154,7 +154,8 @@ class Gate(Command):
         '''
         doc_build_res = []
         os.chdir(repo_dir+'/docs')
-        doc_build_result = subprocess.run(['sphinx-multiversion', 'source','build/html'], capture_output=True, text=True)
+        doc_build_result = subprocess.run(['make', 'html','SPHINXOPTS="-W"'],
+                                          capture_output=True, text=True, check=False)
         if doc_build_result.returncode == 0:
             doc_build_res.append({
                 'name': 'doc_build_check',
