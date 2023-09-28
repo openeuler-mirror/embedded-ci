@@ -23,7 +23,7 @@ class Gitee:
     reencapsulate some of Gitee's interface to pull requests
     '''
 
-    def __init__(self, owner, repo, token):
+    def __init__(self, owner, repo, token=None):
         self._owner = owner
         self._repo = repo
         self._token = token
@@ -59,9 +59,7 @@ class Gitee:
         '''
         get pull request commits list
         '''
-        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/commits?\
-            access_token={self._token}&page=1&per_page=1"
-
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/commits"
         resp = requests.get(url=url, timeout=self.request_timeout)
         if resp.status_code not in self.request_ok_list:
             return None
@@ -72,9 +70,7 @@ class Gitee:
         """
         get pull request commits with files
         """
-        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/files?\
-            access_token={self._token}&page=1&per_page=1"
-
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/files"
         resp = requests.get(url=url, timeout=self.request_timeout)
         if resp.status_code not in self.request_ok_list:
             return None

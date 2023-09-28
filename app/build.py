@@ -51,11 +51,31 @@ class BuildParam:
     This class defines some basic parameter properties
     as a standard for building interface parameters
     '''
-    repo_dir: str
-    workspace: str
-    share_dir: str
-    branch: str
-    pr_num: int
+    workspace: str = None
+    build_code: str = None
+    arch: str = None
+    toolchain: str = None
+    platform: str = None
+    images: str = None
+    features: str = None
+    directory: str = None
+
+    #when gate.py remove ,four para can be delete
+    repo_dir: str = None
+    share_dir: str = None
+    branch: str = None
+    pr_num: int = None
+
+@dataclass
+class CheckParam:
+    '''
+    This class defines some basic parameter properties
+    as a standard for checking interface parameters
+    '''
+    check_code: str = None
+    owner: str = None
+    repo: str = None
+    pr_num: int = None
 
 class Build(ABC):
     '''
@@ -76,3 +96,38 @@ class Build(ABC):
         This function is called by the body framework
         '''
         return self.do_build(param)
+
+    class BuildError(Exception):
+        """
+        Build Error
+        """
+        def __init__(self, message):
+            super().__init__(message)
+
+
+class Check(ABC):
+    '''
+    The check class is a defined interface class that defines
+    the called check function, the subject gate will call the
+    interface to get the check result, and the business needs
+    to inherit the interface class and implement the check interface
+    '''
+
+    @abstractmethod
+    def do_check(self, param: CheckParam):
+        '''
+        This interface needs to be implemented by specific services
+        '''
+
+    def check(self, param: CheckParam):
+        '''
+        This function is called by the body framework
+        '''
+        return self.do_check(param)
+
+    class CheckError(Exception):
+        """
+        Check Error
+        """
+        def __init__(self, message):
+            super().__init__(message)

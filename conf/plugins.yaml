@@ -17,3 +17,9 @@ plugins:
 - name: rtest
   class: RTest
   path: plugins/rtest/rtest.py
+- name: build
+  class: BuildPlatform
+  path: plugins/build_platform/build_platform.py
+- name: codecheck
+  class: CodeCheck
+  path: plugins/code_check/code_check.py
