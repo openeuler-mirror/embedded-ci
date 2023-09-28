@@ -16,3 +16,7 @@ CI_CONF = "ci.yaml"
 CRON_WORKSPACE = "cron"
 GATE_WORKSPACE = "gate"
 CI_WORKSPACE = "ci"
+
+PROCESS_LABEL = "ci_processing"
+SUCCESS_LABEL = "ci_successfil"
+FAILED_LABEL = "ci_failed"

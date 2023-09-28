@@ -38,6 +38,7 @@ class CodeCheck(Command):
         parser.add_argument('-target', '--target', dest="target")
         parser.add_argument('-o', '--owner', dest="owner", default='openeuler')
         parser.add_argument('-p', '--repo', dest="repo", default="")
+        parser.add_argument('-gt', '--gitee_token', dest="gitee_token", default=None)
         parser.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
 
         return parser
@@ -46,7 +47,7 @@ class CodeCheck(Command):
         args = self.parser.parse_args(unknow)
         self.pr_num = args.pr_num
         self.repo = args.repo
-        self.gitee = Gitee(owner=args.owner, repo=args.repo)
+        self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
 
         #check build_code
         if args.check_code is not None and not os.path.isdir(args.check_code):

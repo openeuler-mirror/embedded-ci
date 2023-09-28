@@ -23,3 +23,18 @@ plugins:
 - name: codecheck
   class: CodeCheck
   path: plugins/code_check/code_check.py
+- name: comment
+  class: Comment
+  path: plugins/comment/comment.py
+- name: pr_check
+  class: PrCheck
+  path: plugins/pr_check/pr_check.py
+- name: pre
+  class: Pre
+  path: plugins/pre/pre.py
+- name: serial
+  class: Serial
+  path: plugins/serial/serial.py
+- name: clone_repo
+  class: CloneRepo
+  path: plugins/clone_repo/clone_repo.py

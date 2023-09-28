@@ -15,6 +15,7 @@ import shutil
 import importlib.util
 import subprocess
 import random
+import base64
 
 import yaml
 import git
@@ -132,13 +133,12 @@ def commands_module_from_file(file, mod_name):
 
     return mod
 
-def json_to_html(json_data):
+def json_to_html(json_data, direc="LEFT_TO_RIGHT"):
     '''
     translate json object to html data
     '''
-    build_direction = "LEFT_TO_RIGHT"
     table_attributes = {"style" : "align: center"}
-    html = convert(json_data, build_direction=build_direction, table_attributes=table_attributes)
+    html = convert(json_data, build_direction=direc, table_attributes=table_attributes)
     return html
 
 def generate_random_str(randomlength=16):
@@ -151,3 +151,27 @@ def generate_random_str(randomlength=16):
     for _ in range(randomlength):
         random_str += base_str[random.randint(0, length)]
     return random_str
+
+def install_package(package_name, remote_url = None):
+    '''
+    install python package dynamic
+    '''
+    try:
+        if remote_url is None:
+            subprocess.check_call(["pip3", "install", package_name])
+        else:
+            subprocess.check_call(["pip3", "install", package_name, "-i", remote_url])
+    except subprocess.CalledProcessError:
+        print(f"install {package_name} failed, please do it manual")
+
+def base64_encode(text):
+    """
+    encode text with base64
+    """
+    return base64.b64encode(text.encode()).decode()
+
+def base64_decode(text):
+    """
+    decode text with base64
+    """
+    return base64.b64decode(text.encode()).decode()
