@@ -296,8 +296,11 @@ Run basic test for ci, only run qemu for stand
 
     def run_basic_test(self, arch, platform, img_dir):
         fail_infos = []
-        if (platform.find("-std") < 0):
+        if (platform.find("-std") < 0 and platform.find("qemu") < 0 and platform.find("x86-64") < 0):
             print(f'[WARN]: build {arch} for {platform} not support run automatic in qemu, skip run this image test')
+            return fail_infos
+        if img_dir.find("systemd") >= 0:
+            print(f'[WARN]: build {arch} for {platform} systemd not support run automatic in qemu, skip run this image test')
             return fail_infos
         test_path = os.path.join(self.workspace, "mugen")
         conf_dir = util.get_conf_path()
@@ -314,6 +317,8 @@ Run basic test for ci, only run qemu for stand
         login_wait_str = "openEuler Embedded(openEuler Embedded Reference Distro)"
         if (self.branch == "openEuler-22.03") :
             login_wait_str = "login:"
+        elif (img_dir.find("systemd") >= 0):
+            login_wait_str = "Authorized uses only. All activity may be monitored and reported."
         zimage_path = self.get_file_from_dir(arch_map[arch][1], img_dir)
         print(zimage_path)
         if len(zimage_path) != 1:
@@ -357,6 +362,8 @@ Run basic test for ci, only run qemu for stand
         test_json["env"][0]["kernal_img_path"] = zimage_path
         test_json["env"][0]["initrd_path"] = initrd_path
         test_json["env"][0]["login_wait_str"] = login_wait_str
+        if (img_dir.find("systemd") >= 0):
+            test_json["env"][0]["login_wait_time"] = 15
         test_json["env"][0]["qemu_type"] = qemu_type
         test_json["env"][0]["sdk_path"] = sdk_install_path
         test_json["env"][0]["cpu"] = arch_map[arch][2]

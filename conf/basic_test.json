@@ -10,6 +10,7 @@
             "initrd_path": "{initrd_path}",
             "option_wait_time": "180",
             "login_wait_str": "{login_wait_str}",
+            "login_wait_time": 5,
             "qemu_type": "{type}",
             "cpu": "{cpu}",
             "machine": "{machine}",
