@@ -143,19 +143,23 @@ Run basic test for ci, only run qemu for stand
     def print_test_fail_log(self, test_faild_logs):
         if len(test_faild_logs) == 0:
             return
-        for one_info in test_faild_logs:
+        for one_info in test_faild_logs:            
             print(f"For {one_info[0]}")
+            # [run_info, "", "", "", "not run any combination"]
             if one_info[1] == "":
                 print(f"\t{one_info[4]}")
                 continue
+            # [run_info, one_result, "", "", "not run any testsuite"]
             if one_info[2] == "":
                 print(f"\t for combination - {one_info[1]}, {one_info[4]}")
                 continue
-            if one_info[1] == "":
+            # [run_info, one_result, one_suite, "", "not run any testcase"]
+            if one_info[3] == "":
                 print(f"\t for combination - {one_info[1]} testsuite - {one_info[2]}, {one_info[4]}")
                 continue
-            if one_info[1] == "":
-                print(f"\t for combination - {one_info[1]} testsuite - {one_info[2]} testcase - {one_info[3]}, {one_info[4]}")
+            # [run_info, one_result, one_suite, one, self.get_testcase_log_path(mugen_path, one_suite, one)]
+            if one_info[4] == "":
+                print(f"\t for combination - {one_info[1]} testsuite - {one_info[2]} testcase - {one_info[3]}, lose log file path")
                 continue
             if not os.path.exists(one_info[4]):
                 print(f"\t for combination - {one_info[1]} testsuite - {one_info[2]} testcase - {one_info[3]}, {one_info[4]} log file can't find")
@@ -274,7 +278,7 @@ Run basic test for ci, only run qemu for stand
             tmp_path = os.path.join(results_path, one_result)
             tmp_suite = os.listdir(tmp_path)
             if not tmp_suite or len(tmp_path) == 0:
-                ret_fail_info.append([run_info, one_result, "", "", "not run any testcase"])
+                ret_fail_info.append([run_info, one_result, "", "", "not run any testsuite"])
                 continue
             for one_suite in tmp_suite:
                 tmp_suite_path = os.path.join(tmp_path, one_suite)
