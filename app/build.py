@@ -12,6 +12,7 @@ See the Mulan PSL v2 for more details.
 
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
+from typing import Optional
 
 from app.lib import Result
 
@@ -67,6 +68,17 @@ class BuildParam:
     pr_num: int = None
 
 @dataclass
+class UtestParam:
+    '''
+    This class defines some basic parameter properties
+    as a standard for building interface parameters
+    '''
+    arch:Optional[str] = None
+    target_dir:Optional[str] = None
+    mugen_url:Optional[str] = None
+    mugen_branch:Optional[str] = None
+
+@dataclass
 class CheckParam:
     '''
     This class defines some basic parameter properties
@@ -76,6 +88,8 @@ class CheckParam:
     owner: str = None
     repo: str = None
     pr_num: int = None
+
+
 
 class Build(ABC):
     '''
@@ -100,6 +114,33 @@ class Build(ABC):
     class BuildError(Exception):
         """
         Build Error
+        """
+        def __init__(self, message):
+            super().__init__(message)
+
+class Utest(ABC):
+    '''
+    The build class is a defined interface class that defines
+    the called build function, the subject gate will call the
+    interface to get the build result, and the business needs
+    to inherit the interface class and implement the build interface
+    '''
+
+    @abstractmethod
+    def do_utest(self, param: UtestParam):
+        '''
+        This interface needs to be implemented by specific services
+        '''
+
+    def utest(self, param: UtestParam):
+        '''
+        This function is called by the body framework
+        '''
+        return self.do_utest(param)
+
+    class UtestError(Exception):
+        """
+        Test Error
         """
         def __init__(self, message):
             super().__init__(message)

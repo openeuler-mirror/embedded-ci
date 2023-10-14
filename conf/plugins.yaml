@@ -38,3 +38,6 @@ plugins:
 - name: clone_repo
   class: CloneRepo
   path: plugins/clone_repo/clone_repo.py
+- name: utest
+  class: TestPlatform
+  path: plugins/test_platform/test_platform.py
