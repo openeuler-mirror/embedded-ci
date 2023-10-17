@@ -77,6 +77,17 @@ class Gitee:
 
         return resp.content
 
+    def get_a_commit_info(self, commit_id):
+        """
+        get a commit info from repository
+        """
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/commits/{commit_id}"
+        resp = requests.get(url=url, timeout=self.request_timeout)
+        if resp.status_code not in self.request_ok_list:
+            return None
+
+        return resp.content
+
     def comment_pr(self, pr_num, comment):
         '''
         add comment to pull request
