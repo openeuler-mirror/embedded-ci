@@ -34,7 +34,7 @@ class Run(Build):
         if doc_build_result.returncode == 0:
             print(doc_build_result.stdout)
         else:
-            print('============文档构建失败，错误信息：============')
+            print('============ doc build failed ============')
             print(doc_build_result.stderr)
-            print("============================================")
+            print('==========================================')
             raise self.BuildError("Doc Build ERROR")

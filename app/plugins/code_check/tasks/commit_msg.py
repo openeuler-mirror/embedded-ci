@@ -45,8 +45,9 @@ class Run(Check):
             print("===================Commit Msg Errors========================")
             for check_res in res:
                 print("commit:" + check_res['commit'])
-                print("check result: \n\r", check_res['result'])
+                print("check result: \n", check_res['result'])
                 link = "https://openeuler.gitee.io/yocto-meta-openeuler/master/develop_help/commit.html"
-                print(f"refer to commit msg convention with link:\n    {link}")
+                print(f"refer to commit msg convention with link:\n\n\n    {link}")
                 print("============================================================")
             raise self.CheckError("Commit msg did't comply with the convention")
+        print("commit msg check successful!")
