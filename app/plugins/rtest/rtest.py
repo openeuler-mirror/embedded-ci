@@ -24,8 +24,7 @@ import json
 
 from app import util
 from app.command import Command
-from app.lib import Remote, Gitee
-from app import const
+from app.lib import Gitee
 
 class RTest(Command):
     '''
