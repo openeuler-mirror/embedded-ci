@@ -1,0 +1,5 @@
+test_check:
+- type: m4-qemu
+  suite: 
+  - case: posix
+  - case: math
