@@ -18,5 +18,5 @@ GATE_WORKSPACE = "gate"
 CI_WORKSPACE = "ci"
 
 PROCESS_LABEL = "ci_processing"
-SUCCESS_LABEL = "ci_successfil"
+SUCCESS_LABEL = "ci_successful"
 FAILED_LABEL = "ci_failed"

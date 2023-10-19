@@ -30,7 +30,8 @@ class CGate:
             pr_num: int,
             repo: str,
             owner: str,
-            gitee_token: str):
+            gitee_token: str,
+            duration: str):
         '''
         gate run body
         '''
@@ -51,9 +52,10 @@ class CGate:
         self.send_check_table(check_list=check_list,
                               pr_num=pr_num,
                               gitee=gitee,
-                              final_res=final_res)
+                              final_res=final_res,
+                              duration=duration)
 
-    def send_check_table(self, check_list: list[CommendParam], pr_num, gitee: Gitee, final_res: bool):
+    def send_check_table(self, check_list:list[CommendParam], pr_num, gitee:Gitee, final_res:bool, duration:str):
         '''
         xxx
         '''
@@ -63,6 +65,10 @@ class CGate:
             caption=table_caption+Result().get_emoji(Result().success)+"PASS"
         else:
             caption=table_caption+Result().get_emoji(Result().faild)+"FAILD"
+        #add duration
+        if duration is not None:
+            caption = caption + "<br>" + "本次构建耗时  " + "<u>" + duration + "</u>"
+
         # header data
         table = []
         for check in check_list:
