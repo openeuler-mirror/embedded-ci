@@ -46,8 +46,7 @@ class CloneRepo(Command):
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)
         if args.workspace is not None:
-            if not os.path.exists(args.workspace):
-                os.makedirs(args.workspace)
+            os.makedirs(args.workspace, exist_ok=True)
             os.chdir(args.workspace)
 
         if os.path.exists(args.repo):
