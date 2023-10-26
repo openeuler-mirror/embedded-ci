@@ -19,6 +19,7 @@ from app import util
 
 NATIVE_SDK_DIR= "/opt/buildtools/nativesdk"
 GCC_DIR = "/usr1/openeuler/gcc"
+PRE_SOURCE_DIR = "/usr1/src"
 
 class Run(Build):
     """
@@ -94,6 +95,18 @@ class Run(Build):
         local_conf += 'RM_WORK_EXCLUDE += "glog libflann"\n'
         compile_conf['local_conf'] = local_conf
         util.write_yaml(compile_path, compile_conf)
+
+        #establish a soft link to access the source code present in the container
+        if os.path.isdir(PRE_SOURCE_DIR):
+            for pkg_name in os.listdir(PRE_SOURCE_DIR):
+                pkg_path = os.path.join(PRE_SOURCE_DIR, pkg_name)
+                if os.path.isdir(pkg_path):
+                    link_path = os.path.join(oebuild_src_dir, pkg_name)
+                    try:
+                        os.symlink(pkg_path, link_path)
+                    except FileExistsError:
+                        print(f"{pkg_name} already exists in Path:{oebuild_src_dir}")
+                        continue
 
         print("======================== oebuild bitbake ==========================")
         image_list = [i.strip() for i in str(param.images).split(';')]
