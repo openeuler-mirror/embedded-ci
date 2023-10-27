@@ -54,36 +54,60 @@ class Run(Build):
             board_res = []
             for board in arch['board']:
                 # run `oebuild bitbake openeuler-image`
-                with subprocess.Popen(
-                    f"python3 build.py {board['name']}",
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    cwd=param.repo_dir,
-                    encoding="utf-8") as s_p:
-
-                    last_line = ""
-                    for line in s_p.stdout:
-                        line = line.strip('\n')
-                        last_line = line
-                        print(line)
-                    for line in s_p.stderr:
-                        line = line.strip('\n')
-                        last_line = line
-                        print(line)
-                    s_p.wait()
-
-                    if last_line.find("all lib succeed! ####################") != -1:
-                        build_res = Result().success
-                    else:
-                        build_res = Result().faild
-                        do_test = False
-                    board_res.append(Board(name=f"{board['name']}", result=build_res))
+                build_cmd = f"python3 build.py {board['name']}"
+                print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd: {build_cmd}')
+                output, ret = self.run_build_cmd(build_cmd, param.repo_dir)
+                print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: output: ')
+                print(output)
+                build_res = Result().success
+                if output.find("all lib succeed! ####################") < 0 or ret != 0:
+                    print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd: {build_cmd} fail')
+                    build_res = Result().faild
+                    do_test = False
+                board_res.append(Board(name=f"{board['name']}", result=build_res))
             arch_res.append(Arch(name=arch["arch"], boards=board_res))
+        for arch in gate_conf['demo_check']:
+            board_res = []
+            for board in arch['board']:
+                run_script = []
+                build_run_path = os.path.join(param.repo_dir, "demos", board["name"], "build")
+                if("app" in board.keys()):
+                    for one_app in board["app"]:
+                        run_script.append(f'sh -x -e build_app.sh {one_app["app_name"]}')
+                else:
+                    run_script.append(f'sh -x -e build_app.sh')
+                
+                for one_script in run_script:
+                    run_res = Result().success
+                    board_name = board["name"] if one_script.replace('sh -x -e build_app.sh', '') == "" else f"{board['name']} - {one_script.replace('sh -x -e build_app.sh', '')}"
+                    print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run demo cmd: {one_script} in {build_run_path}')
+                    output, ret = self.run_build_cmd(one_script, build_run_path)
+                    print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run demo cmd: {one_script} in {build_run_path} finish')
+                    if ret != 0:
+                        print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run demo cmd: {one_script} fail, output: ')
+                        print(output)
+                        run_res = Result().faild
+                    board_res.append(Board(name=f"{board_name}", result=run_res))
+            arch_res.append(Arch(name=f'demo build {arch["arch"]}', boards=board_res))
+
         if do_test:
             arch_res.extend(self.run_test(param))
         return BuildRes(archs=arch_res)
-    
+
+    def run_build_cmd(self, run_script, run_dir):
+        output = ""
+        ret = 1
+        with subprocess.Popen(
+            run_script,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=run_dir,
+            encoding="utf-8") as s_p:
+            output, _ = s_p.communicate()
+            ret = s_p.returncode
+        return output, ret
+
     def run_test(self, param):
         run_test_path = os.path.join(param.repo_dir, "testsuites", "build")
         step_reslt = []
