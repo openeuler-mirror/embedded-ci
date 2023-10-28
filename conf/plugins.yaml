@@ -41,3 +41,6 @@ plugins:
 - name: utest
   class: TestPlatform
   path: plugins/test_platform/test_platform.py
+- name: put_remote
+  class: PutRemote
+  path: plugins/put_remote/put_remote.py

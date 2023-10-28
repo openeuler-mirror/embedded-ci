@@ -16,6 +16,7 @@ import importlib.util
 import subprocess
 import random
 import base64
+import hashlib
 
 import yaml
 import git
@@ -175,3 +176,20 @@ def base64_decode(text):
     decode text with base64
     """
     return base64.b64decode(text.encode()).decode()
+
+def add_sum_to_local_dir(local_dir):
+    """
+    adds a sign to all files in the specified directory
+    """
+    file_list = os.listdir(local_dir)
+    for file_name in file_list:
+        file_path = os.path.join(local_dir, file_name)
+        if os.path.isdir(file_path):
+            add_sum_to_local_dir(file_path)
+        else:
+            sha256 = hashlib.sha256(''.encode('utf-8'))
+            with open(file_path, 'rb') as r_f:
+                while data := r_f.read(1024):
+                    sha256.update(data)
+                with open(f'{file_path}.sha256sum', 'w', encoding="utf-8") as w_f:
+                    w_f.write(f"{str(sha256.hexdigest())} {file_name}")

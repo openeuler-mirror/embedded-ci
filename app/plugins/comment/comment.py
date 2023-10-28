@@ -16,6 +16,7 @@ import json
 from app.plugins.comment.interface import translate_commend_param
 from app.command import Command
 from app.plugins.comment.cgate import CGate
+from app.plugins.comment.ci import CCI
 from app import util
 
 class Comment(Command):
@@ -38,6 +39,7 @@ class Comment(Command):
         parser.add_argument('-dt', '--duration_time', dest="duration_time", default=None)
         parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
         parser.add_argument('-pr', '--pr_num', dest="pr_num")
+        parser.add_argument('-b', '--branch', dest="branch")
         parser.add_argument('-chk', '--checks', dest='checks', action='append')
 
         return parser
@@ -62,6 +64,13 @@ class Comment(Command):
                     owner=args.owner,
                     gitee_token=args.gitee_token,
                     duration = duration_str)
+        if args.method == "ci":
+            cls = CCI()
+            cls.run(check_list=check_list,
+                    repo=args.repo,
+                    owner=args.owner,
+                    gitee_token=args.gitee_token,
+                    branch=args.branch)
 
     def format_time(self, duration_time)->str:
         '''

@@ -11,6 +11,8 @@ See the Mulan PSL v2 for more details.
 '''
 
 import os
+import subprocess
+import time
 
 import requests
 import jenkins
@@ -213,18 +215,18 @@ class Remote:
                 all_files.append(file_path)
         return all_files
 
-
     def put_to_remote(self, local_dir, dst_dir, is_delete_dst=False):
         '''
         put local directory to destination
         '''
         ssh_cli, sftp_cli = self._get_ssh_client()
         if is_delete_dst:
-            ssh_cli.exec_command(f"rm -rf {dst_dir}")
+            ssh_cli.exec_command(f"rm -rf {dst_dir}/*")
             ssh_cli.exec_command(f"mkdir -p {dst_dir}")
         os.chdir(local_dir)
         all_files = self._get_files_from_dir(local_dir=local_dir)
         print(all_files)
+
         for file_path in all_files:
             remote_dir = os.path.dirname(file_path)
             remote_dir = os.path.relpath(remote_dir, local_dir)
@@ -232,10 +234,15 @@ class Remote:
             ssh_cli.exec_command(f"mkdir -p {dst_remote_dir}")
             remote_file = os.path.join(dst_remote_dir, os.path.basename(file_path))
             try:
+                print(file_path)
                 sftp_cli.put(file_path, remote_file)
+                time.sleep(0.1)
                 print(f"dst_file: {remote_file} successful")
             except FileNotFoundError:
                 print(f"local_file: {file_path} not exists")
+            except IOError:
+                print(f"file put faild: {file_path}")
+
         sftp_cli.close()
         ssh_cli.close()
 

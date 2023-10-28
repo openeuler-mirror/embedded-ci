@@ -41,7 +41,9 @@ class BuildPlatform(Command):
         parser.add_argument('-t', '--toolchain', dest="toolchain", default=None)
         parser.add_argument('-p', '--platform', dest="platform", default=None)
         parser.add_argument('-i', '--images', dest="images", default=None)
+        parser.add_argument('-ic', '--img_cmds', dest="img_cmds", action="append", default=None)
         parser.add_argument('-f', '--features', dest="features", default=None)
+        parser.add_argument('-dt', '--datetime', dest="datetime", default=None)
         parser.add_argument('-d', '--directory', dest="directory", default="build")
 
         return parser
@@ -52,6 +54,14 @@ class BuildPlatform(Command):
         if not os.path.isdir(args.build_code):
             raise ValueError(f"Code for build not exist in path: {args.build_code} ! ")
 
+        # 处理目标编码
+        if args.images is None:
+            img_list = []
+            for img_cmd in args.img_cmds:
+                img_list.append(util.base64_decode(img_cmd))
+        else:
+            img_list = args.images
+
         #invoke process class
         task_path = util.get_top_path() + f"/app/plugins/build_platform/tasks/{args.target}.py"
         cls:Build = util.get_spec_ext(task_path, "Run")
@@ -61,6 +71,7 @@ class BuildPlatform(Command):
             arch=args.arch,
             toolchain=args.toolchain,
             platform=args.platform,
-            images=args.images,
+            images=";".join(img_list),
             features=args.features,
-            directory=args.directory))
+            directory=args.directory,
+            datetime=args.datetime))

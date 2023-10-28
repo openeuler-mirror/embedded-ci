@@ -40,12 +40,16 @@ class Serial(Command):
         return parser
 
     def do_run(self, args, unknow):
+        if unknow[0] == "string":
+            del unknow[0]
+            print(util.base64_encode(" ".join(unknow)))
+            return
         args = self.parser.parse_args(unknow)
+
         obj = {}
         for param in args.params:
             param_list = param.split('=')
             if len(param_list) < 2:
                 continue
             obj[param_list[0]] = param_list[1]
-
         print(util.base64_encode(json.dumps(obj)))

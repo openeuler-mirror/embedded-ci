@@ -60,6 +60,7 @@ class BuildParam:
     images: str = None
     features: str = None
     directory: str = None
+    datetime: str = None
 
     #when gate.py remove ,four para can be delete
     repo_dir: str = None
