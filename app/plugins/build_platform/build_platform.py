@@ -55,7 +55,7 @@ class BuildPlatform(Command):
             raise ValueError(f"Code for build not exist in path: {args.build_code} ! ")
 
         # 处理目标编码
-        if args.images is None:
+        if args.images is None and args.img_cmds is not None:
             img_list = []
             for img_cmd in args.img_cmds:
                 img_list.append(util.base64_decode(img_cmd))
