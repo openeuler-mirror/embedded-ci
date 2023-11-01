@@ -55,12 +55,12 @@ class BuildPlatform(Command):
             raise ValueError(f"Code for build not exist in path: {args.build_code} ! ")
 
         # 处理目标编码
-        if args.images is None and args.img_cmds is not None:
-            img_list = []
+        img_list = []
+        if args.img_cmds is not None:
             for img_cmd in args.img_cmds:
                 img_list.append(util.base64_decode(img_cmd))
-        else:
-            img_list = args.images
+        elif args.images is not None:
+            img_list.append(args.images)
 
         #invoke process class
         task_path = util.get_top_path() + f"/app/plugins/build_platform/tasks/{args.target}.py"
