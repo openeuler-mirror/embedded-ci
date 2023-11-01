@@ -28,7 +28,7 @@ class Command(ABC):
     @abstractmethod
     def do_add_parser(self, parser_addr):
         '''
-        the interface will be invoke by run
+        the interface will be invoked by run
         '''
 
     @abstractmethod
@@ -49,7 +49,7 @@ class Command(ABC):
         '''
         parser = self.do_add_parser(parser_addr=parser_addr)
         if parser is None:
-            raise ValueError('add parser faild')
+            raise ValueError('add parser failed')
 
         self.parser = parser
         return self.parser
