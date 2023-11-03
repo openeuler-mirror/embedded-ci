@@ -54,6 +54,10 @@ class Run(Build):
         if param.features is not None:
             for feature in [i.strip() for i in str(param.features).split(';')]:
                 generate_cmd = generate_cmd + f" -f {feature}"
+        if param.sstate_cache_in is not None:
+            generate_cmd = generate_cmd + f" -s {param.sstate_cache_in}"
+        if param.sstate_cache_out is not None:
+            generate_cmd = generate_cmd + f" -s_dir {param.sstate_cache_out}"
 
         err_code, result = subprocess.getstatusoutput(generate_cmd)
         if err_code != 0:

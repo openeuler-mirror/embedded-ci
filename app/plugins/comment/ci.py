@@ -18,14 +18,14 @@ from app import util
 
 class CCI:
     '''
-    for gate task
+    for ci task
     '''
     def __init__(self) -> None:
         '''
-        comment gate
+        comment ci
         '''
 
-    def run(self, 
+    def run(self,
             check_list: list,
             repo: str,
             owner: str,
@@ -40,7 +40,14 @@ class CCI:
             gitee = Gitee(owner=owner,repo=repo,token=gitee_token)
         else:
             gitee = None
-        self.send_faild_issue(check_list=check_list, gitee=gitee, branch=branch)
+
+        final_res = True
+        for check in check_list:
+            if check.result != "success":
+                final_res = False
+                break
+        if not final_res:
+            self.send_faild_issue(check_list=check_list, gitee=gitee, branch=branch)
 
     def send_faild_issue(self, check_list: list[CommendParam], gitee: Gitee, branch: str):
         '''

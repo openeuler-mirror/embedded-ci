@@ -45,6 +45,8 @@ class BuildPlatform(Command):
         parser.add_argument('-f', '--features', dest="features", default=None)
         parser.add_argument('-dt', '--datetime', dest="datetime", default=None)
         parser.add_argument('-d', '--directory', dest="directory", default="build")
+        parser.add_argument('-s_in', '--sstate_cache_in', dest="sstate_cache_in", default=None)
+        parser.add_argument('-s_out', '--sstate_cache_out', dest="sstate_cache_out", default=None)
 
         return parser
 
@@ -74,4 +76,6 @@ class BuildPlatform(Command):
             images=";".join(img_list),
             features=args.features,
             directory=args.directory,
-            datetime=args.datetime))
+            datetime=args.datetime,
+            sstate_cache_in=args.sstate_cache_in,
+            sstate_cache_out=args.sstate_cache_out))
