@@ -11,7 +11,6 @@ See the Mulan PSL v2 for more details.
 '''
 
 import os
-import subprocess
 import time
 
 import requests
@@ -62,6 +61,8 @@ class Gitee:
         get pull request commits list
         '''
         url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/commits"
+        if self._token is not None:
+            url = url + rf"?access_token={self._token}"
         resp = requests.get(url=url, timeout=self.request_timeout)
         if resp.status_code not in self.request_ok_list:
             return None
@@ -73,6 +74,8 @@ class Gitee:
         get pull request commits with files
         """
         url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/files"
+        if self._token is not None:
+            url = url + rf"?access_token={self._token}"
         resp = requests.get(url=url, timeout=self.request_timeout)
         if resp.status_code not in self.request_ok_list:
             return None
@@ -84,6 +87,8 @@ class Gitee:
         get a commit info from repository
         """
         url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/commits/{commit_id}"
+        if self._token is not None:
+            url = url + rf"?access_token={self._token}"
         resp = requests.get(url=url, timeout=self.request_timeout)
         if resp.status_code not in self.request_ok_list:
             return None

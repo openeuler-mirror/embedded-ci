@@ -15,14 +15,13 @@ import json
 
 from app import util
 from app.build import Check
-from app.lib import Gitee
 
 class Run(Check):
     '''
     check commit msg and return result
     '''
     def do_check(self, param):
-        gitee = Gitee(owner=param.owner, repo=param.repo)
+        gitee = param.gitee
         commit_hash_list = json.loads(gitee.get_pr_commits(param.pr_num))
 
         #select config to use

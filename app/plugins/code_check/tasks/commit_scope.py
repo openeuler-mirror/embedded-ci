@@ -11,7 +11,6 @@ See the Mulan PSL v2 for more details.
 '''
 import json
 from app.build import Check
-from app.lib import Gitee
 
 class Run(Check):
     '''
@@ -19,7 +18,7 @@ class Run(Check):
     and both cannot coexist in a commit
     '''
     def do_check(self, param):
-        gitee = Gitee(owner=param.owner, repo=param.repo)
+        gitee = param.gitee
         #get commits in a pr
         commit_hash_list = json.loads(gitee.get_pr_commits(param.pr_num))
         if len(commit_hash_list) == 0:

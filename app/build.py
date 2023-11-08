@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from app.lib import Result
+from app.lib import Gitee
 
 @dataclass
 class Board:
@@ -91,6 +92,7 @@ class CheckParam:
     owner: str = None
     repo: str = None
     pr_num: int = None
+    gitee: Gitee = None
 
 
 

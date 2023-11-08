@@ -60,4 +60,5 @@ class CodeCheck(Command):
             check_code=args.check_code,
             owner=args.owner,
             repo=args.repo,
+            gitee=self.gitee,
             pr_num=args.pr_num))
