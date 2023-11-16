@@ -49,7 +49,8 @@ class Run(Utest):
         '''
         the exec will be called by gate
         '''
-        self.clone_mugen()
+        if not os.path.exists(os.path.join(self.workspace, "mugen")):
+            self.clone_mugen()
 
         os.chdir(os.path.dirname(self.workspace))
         # get config
