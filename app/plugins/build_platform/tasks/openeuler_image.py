@@ -55,9 +55,15 @@ class Run(Build):
             for feature in [i.strip() for i in str(param.features).split(';')]:
                 generate_cmd = generate_cmd + f" -f {feature}"
         if param.sstate_cache_in is not None:
-            generate_cmd = generate_cmd + f" -s {param.sstate_cache_in}"
+            if os.path.isdir(param.sstate_cache_in):
+                generate_cmd = generate_cmd + f" -s {param.sstate_cache_in}"
+            else:
+                print("[WARN]:Parameter sstate_cache_in was not successfully applied ")
         if param.sstate_cache_out is not None:
-            generate_cmd = generate_cmd + f" -s_dir {param.sstate_cache_out}"
+            if os.path.isdir(param.sstate_cache_out):
+                generate_cmd = generate_cmd + f" -s_dir {param.sstate_cache_out}"
+            else:
+                print("[WARN]:Parameter sstate_cache_out was not successfully applied ")
 
         err_code, result = subprocess.getstatusoutput(generate_cmd)
         if err_code != 0:
