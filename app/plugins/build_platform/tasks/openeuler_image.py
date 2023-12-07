@@ -36,6 +36,7 @@ class Run(Build):
         os.chdir(param.workspace)
         err_code, result = subprocess.getstatusoutput("oebuild init oebuild_workspace")
         if err_code != 0:
+            print(result)
             raise ValueError(result)
         print(result)
         oebuild_src_dir = os.path.join(oebuild_workspace, 'src')
@@ -67,6 +68,7 @@ class Run(Build):
 
         err_code, result = subprocess.getstatusoutput(generate_cmd)
         if err_code != 0:
+            print(result)
             raise ValueError(result)
 
         print("======================== generate finished ========================")
@@ -92,6 +94,7 @@ class Run(Build):
                         version = layer_repo['version'],
                         depth = 1)
                 else:
+                    print(f"\n\n[ERROR]:manifest.yaml don't have info to download repo {value}.")
                     raise ValueError(f"manifest.yaml don't have info to download repo {value}.")
         print("==================== download layer finished ======================")
 
@@ -125,7 +128,7 @@ class Run(Build):
         for image in image_list:
             print(f"==================== bitbake {param.directory}->{image} ======================")
             with subprocess.Popen(
-                        f"oebuild bitbake {image}",
+                        f"oebuild bitbake {image} -k",
                         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                         cwd=build_dir,
                         encoding="utf-8") as s_p:
