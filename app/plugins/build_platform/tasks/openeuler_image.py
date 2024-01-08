@@ -132,17 +132,23 @@ class Run(Build):
                         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                         cwd=build_dir,
                         encoding="utf-8") as s_p:
-                last_line = ""
-                for line in s_p.stderr:
-                    line = line.strip('\n')
-                    last_line = line
-                    print(line)
-                for line in s_p.stdout:
-                    line = line.strip('\n')
-                    last_line = line
-                    print(line)
+                if s_p.returncode is not None and s_p.returncode != 0:
+                    err_msg = ''
+                    if s_p.stderr is not None:
+                        for line in s_p.stderr:
+                            err_msg.join(line)
+                        raise ValueError(err_msg)
+                res = None
+                while res is None:
+                    res = s_p.poll()
+                    if s_p.stdout is not None:
+                        for line in s_p.stdout:
+                            print(line.strip('\n'))
+                    if s_p.stderr is not None:
+                        for line in s_p.stderr:
+                            print(line.strip('\n'))
                 s_p.wait()
-                if last_line.find("returning a non-zero exit code.") != -1:
+                if res != 0:
                     raise self.BuildError("Build Error")
             print(f"============== bitbake {param.directory}->{image} successful =================")
         print("=========================oebuild finished==========================")
