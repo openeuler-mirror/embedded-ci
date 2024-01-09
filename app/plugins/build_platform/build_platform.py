@@ -10,7 +10,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
 
-import argparse
+from argparse import _SubParsersAction
 import os
 
 from app import util
@@ -33,22 +33,21 @@ class BuildPlatform(Command):
             "Build Platform", 
             "Build Platform is used to build images, docs, sdks and hosttools")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-c', '--build_code', dest="build_code")
-        parser.add_argument('-target', '--target', dest="target")
-        parser.add_argument('-a', '--arch', dest="arch", default="arch")
-        parser.add_argument('-t', '--toolchain', dest="toolchain", default=None)
-        parser.add_argument('-p', '--platform', dest="platform", default=None)
-        parser.add_argument('-i', '--images', dest="images", default=None)
-        parser.add_argument('-ic', '--img_cmds', dest="img_cmds", action="append", default=None)
-        parser.add_argument('-f', '--features', dest="features", default=None)
-        parser.add_argument('-dt', '--datetime', dest="datetime", default=None)
-        parser.add_argument('-d', '--directory', dest="directory", default="build")
-        parser.add_argument('-s_in', '--sstate_cache_in', dest="sstate_cache_in", default=None)
-        parser.add_argument('-s_out', '--sstate_cache_out', dest="sstate_cache_out", default=None)
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-c', '--build_code', dest="build_code")
+        parser_addr.add_argument('-target', '--target', dest="target")
+        parser_addr.add_argument('-a', '--arch', dest="arch", default="arch")
+        parser_addr.add_argument('-t', '--toolchain', dest="toolchain", default=None)
+        parser_addr.add_argument('-p', '--platform', dest="platform", default=None)
+        parser_addr.add_argument('-i', '--images', dest="images", default=None)
+        parser_addr.add_argument('-ic', '--img_cmds', dest="img_cmds", action="append", default=None)
+        parser_addr.add_argument('-f', '--features', dest="features", default=None)
+        parser_addr.add_argument('-dt', '--datetime', dest="datetime", default=None)
+        parser_addr.add_argument('-d', '--directory', dest="directory", default="build")
+        parser_addr.add_argument('-s_in', '--sstate_cache_in', dest="sstate_cache_in", default=None)
+        parser_addr.add_argument('-s_out', '--sstate_cache_out', dest="sstate_cache_out", default=None)
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

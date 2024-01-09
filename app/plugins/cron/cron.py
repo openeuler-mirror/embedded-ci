@@ -13,7 +13,7 @@ See the Mulan PSL v2 for more details.
 import os
 import subprocess
 import logging
-import argparse
+from argparse import _SubParsersAction
 import shutil
 import time
 from io import StringIO
@@ -39,21 +39,20 @@ class Cron(Command):
         "this is a CI timed task", 
         "this task is for generating sstate-cache and used in gate and ci")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-s', '--share_dir', dest = "share_dir")
-        parser.add_argument('-b', '--branch', dest = "branch", default="master")
-        parser.add_argument('-m',
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-s', '--share_dir', dest = "share_dir")
+        parser_addr.add_argument('-b', '--branch', dest = "branch", default="master")
+        parser_addr.add_argument('-m',
                             '--tmp_dir',
                             dest = "tmp_dir",
                             default = "/home/jenkins/agent/openeuler_tmp")
-        parser.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
-        parser.add_argument('-o', '--owner', dest = "owner")
-        parser.add_argument('-p', '--repo', dest = "repo")
-        parser.add_argument('-gt', '--gitee_token', dest = "gitee_token")
-        parser.add_argument('-sf', '--send_faild', dest = "is_send_faild", action = "store_true")
+        parser_addr.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
+        parser_addr.add_argument('-o', '--owner', dest = "owner")
+        parser_addr.add_argument('-p', '--repo', dest = "repo")
+        parser_addr.add_argument('-gt', '--gitee_token', dest = "gitee_token")
+        parser_addr.add_argument('-sf', '--send_faild', dest = "is_send_faild", action = "store_true")
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

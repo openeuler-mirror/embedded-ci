@@ -9,7 +9,7 @@ EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
-import argparse
+from argparse import _SubParsersAction
 import os
 import subprocess
 import shutil
@@ -51,21 +51,20 @@ class CI(Command):
 Periodically build the corresponding release image according to the relevant configuration file
 """)
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-b', '--branch', dest="branch", default="master")
-        parser.add_argument('-e', '--remote_dst_dir', dest="remote_dst_dir")
-        parser.add_argument('-i', '--remote_dst_ip', dest="remote_dst_ip")
-        parser.add_argument('-u', '--remote_dst_user', dest="remote_dst_user")
-        parser.add_argument('-w', '--remote_dst_pwd', dest="remote_dst_pwd")
-        parser.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey")
-        parser.add_argument('-o', '--owner', dest="owner")
-        parser.add_argument('-p', '--repo', dest="repo")
-        parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
-        parser.add_argument('-sf', '--send_faild', dest = "is_send_faild", action = "store_true")
-        parser.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-b', '--branch', dest="branch", default="master")
+        parser_addr.add_argument('-e', '--remote_dst_dir', dest="remote_dst_dir")
+        parser_addr.add_argument('-i', '--remote_dst_ip', dest="remote_dst_ip")
+        parser_addr.add_argument('-u', '--remote_dst_user', dest="remote_dst_user")
+        parser_addr.add_argument('-w', '--remote_dst_pwd', dest="remote_dst_pwd")
+        parser_addr.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey")
+        parser_addr.add_argument('-o', '--owner', dest="owner")
+        parser_addr.add_argument('-p', '--repo', dest="repo")
+        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-sf', '--send_faild', dest = "is_send_faild", action = "store_true")
+        parser_addr.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

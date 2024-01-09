@@ -9,18 +9,18 @@ EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
-import argparse
+
+from argparse import _SubParsersAction
 import os
 import subprocess
 import shutil
 import datetime
 from io import StringIO
 import time
-
-import yaml
-import git
 import re
 import json
+import yaml
+import git
 
 from app import util
 from app.command import Command
@@ -45,21 +45,20 @@ class RTest(Command):
 Run basic test for ci, only run qemu for stand
 """)
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-o', '--owner', dest="owner")
-        parser.add_argument('-p', '--repo', dest="repo")
-        parser.add_argument('-b', '--branch', dest="build_branch", default="master")
-        parser.add_argument('-c', '--conf_name', dest="conf_name", default="ci")
-        parser.add_argument('-di', '--images_directory', dest = "images_directory")
-        parser.add_argument('-dw', '--workspace_directory', dest = "workspace_directory")
-        parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
-        parser.add_argument('-tm', '--test_mugen_url', dest = "test_mugen_url")
-        parser.add_argument('-tb', '--test_mugen_branch', dest = "test_mugen_branch")
-        parser.add_argument('-stf', '--send_test_fail', dest = "send_test_fail", action = "store_true")
-        parser.add_argument('-pel', '--print_error_log', dest = "print_error_log", action = "store_true")
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-o', '--owner', dest="owner")
+        parser_addr.add_argument('-p', '--repo', dest="repo")
+        parser_addr.add_argument('-b', '--branch', dest="build_branch", default="master")
+        parser_addr.add_argument('-c', '--conf_name', dest="conf_name", default="ci")
+        parser_addr.add_argument('-di', '--images_directory', dest = "images_directory")
+        parser_addr.add_argument('-dw', '--workspace_directory', dest = "workspace_directory")
+        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-tm', '--test_mugen_url', dest = "test_mugen_url")
+        parser_addr.add_argument('-tb', '--test_mugen_branch', dest = "test_mugen_branch")
+        parser_addr.add_argument('-stf', '--send_test_fail', dest = "send_test_fail", action = "store_true")
+        parser_addr.add_argument('-pel', '--print_error_log', dest = "print_error_log", action = "store_true")
         
-        return parser
+        return parser_addr
     
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

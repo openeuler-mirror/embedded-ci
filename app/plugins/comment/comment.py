@@ -10,7 +10,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
 
-import argparse
+from argparse import _SubParsersAction
 import json
 
 from app.plugins.comment.interface import translate_commend_param
@@ -31,18 +31,17 @@ class Comment(Command):
             "format gate or ci result", 
             "This command is to format result that come from gate or ci")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-m', '--method', dest="method")
-        parser.add_argument('-o', '--owner', dest="owner")
-        parser.add_argument('-p', '--repo', dest="repo")
-        parser.add_argument('-dt', '--duration_time', dest="duration_time", default=None)
-        parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
-        parser.add_argument('-pr', '--pr_num', dest="pr_num")
-        parser.add_argument('-b', '--branch', dest="branch")
-        parser.add_argument('-chk', '--checks', dest='checks', action='append')
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-m', '--method', dest="method")
+        parser_addr.add_argument('-o', '--owner', dest="owner")
+        parser_addr.add_argument('-p', '--repo', dest="repo")
+        parser_addr.add_argument('-dt', '--duration_time', dest="duration_time", default=None)
+        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-pr', '--pr_num', dest="pr_num")
+        parser_addr.add_argument('-b', '--branch', dest="branch")
+        parser_addr.add_argument('-chk', '--checks', dest='checks', action='append')
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

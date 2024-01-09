@@ -10,7 +10,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
 
-import argparse
+from argparse import _SubParsersAction
 import os
 
 from app import util
@@ -33,15 +33,14 @@ class TestPlatform(Command):
             "Test Platform", 
             "Test Platform is used to test images")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-a', '--arch', dest="arch", default="basic_test.json")
-        parser.add_argument('-target', '--target', dest="target")
-        parser.add_argument('-td', '--target_directory', dest = "target_directory")
-        parser.add_argument('-tm', '--mugen_url', dest = "mugen_url", default=None)
-        parser.add_argument('-tb', '--mugen_branch', dest = "mugen_branch", default="master")
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-a', '--arch', dest="arch", default="basic_test.json")
+        parser_addr.add_argument('-target', '--target', dest="target")
+        parser_addr.add_argument('-td', '--target_directory', dest = "target_directory")
+        parser_addr.add_argument('-tm', '--mugen_url', dest = "mugen_url", default=None)
+        parser_addr.add_argument('-tb', '--mugen_branch', dest = "mugen_branch", default="master")
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

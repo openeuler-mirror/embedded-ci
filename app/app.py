@@ -33,7 +33,7 @@ class App:
         self.plugins = self._get_plugins()
         self.spec_exts = {}
         self.parser = None
-        self.subparser_gen = None
+        self.subparser_gen = {}
 
     def _get_ext_spec(self):
         for plugin in self.plugins:
@@ -55,9 +55,8 @@ class App:
         parser = argparse.ArgumentParser()
         subparser_gen = parser.add_subparsers(metavar='<command>', dest="command")
         for plugin in self.plugins:
-            subparser_gen.add_parser(plugin.name)
+            self.subparser_gen[plugin.name] = subparser_gen.add_parser(name = plugin.name)
         self.parser = parser
-        self.subparser_gen = subparser_gen
 
     def run_command(self, argv):
         '''
@@ -71,7 +70,7 @@ class App:
             return
         cmd = self.spec_exts[args.command]
 
-        subargs = cmd.add_parser(self.subparser_gen)
+        subargs = cmd.add_parser(self.subparser_gen[args.command])
 
         cmd.run(subargs, unknow)
 

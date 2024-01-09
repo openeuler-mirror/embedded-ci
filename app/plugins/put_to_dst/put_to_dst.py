@@ -11,7 +11,7 @@ See the Mulan PSL v2 for more details.
 '''
 import os
 import shutil
-import argparse
+from argparse import _SubParsersAction
 
 from app.command import Command
 from app.lib import Remote
@@ -33,20 +33,18 @@ class PutToDst(Command):
             include other local directories, mounted shared disks, remote servers, etc
             """)
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-t', '--dst_type', dest="dst_type")
-        parser.add_argument('-dd', '--dst_dir', dest="dst_dir")
-        parser.add_argument('-ld', '--local_dir', dest="local_dir")
-        parser.add_argument('-sign', '--sign_file', dest="sign_file", action="store_true")
-        parser.add_argument('-d', '--delete_original', dest="delete_original", action="store_true")
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-t', '--dst_type', dest="dst_type")
+        parser_addr.add_argument('-dd', '--dst_dir', dest="dst_dir")
+        parser_addr.add_argument('-ld', '--local_dir', dest="local_dir")
+        parser_addr.add_argument('-sign', '--sign_file', dest="sign_file", action="store_true")
+        parser_addr.add_argument('-d', '--delete_original', dest="delete_original", action="store_true")
+        parser_addr.add_argument('-i', '--remote_dst_ip', dest="remote_dst_ip", default=None)
+        parser_addr.add_argument('-u', '--remote_dst_user', dest="remote_dst_user", default=None)
+        parser_addr.add_argument('-w', '--remote_dst_pwd', dest="remote_dst_pwd", default=None)
+        parser_addr.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey", default=None)
 
-        parser.add_argument('-i', '--remote_dst_ip', dest="remote_dst_ip", default=None)
-        parser.add_argument('-u', '--remote_dst_user', dest="remote_dst_user", default=None)
-        parser.add_argument('-w', '--remote_dst_pwd', dest="remote_dst_pwd", default=None)
-        parser.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey", default=None)
-
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

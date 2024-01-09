@@ -9,7 +9,7 @@ EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
-import argparse
+from argparse import _SubParsersAction
 import os
 import shutil
 
@@ -32,16 +32,15 @@ class CloneRepo(Command):
     It can be downloaded by version, pr_num, or specified
     download depth, etc.""")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-r', '--remote_url', dest="remote_url", default=None)
-        parser.add_argument('-w', '--workspace', dest="workspace", default=None)
-        parser.add_argument('-p', '--repo', dest="repo")
-        parser.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
-        parser.add_argument('-v', '--version', dest="version", default=None)
-        parser.add_argument('-dp', '--depth', dest="depth", default=1)
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-r', '--remote_url', dest="remote_url", default=None)
+        parser_addr.add_argument('-w', '--workspace', dest="workspace", default=None)
+        parser_addr.add_argument('-p', '--repo', dest="repo")
+        parser_addr.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
+        parser_addr.add_argument('-v', '--version', dest="version", default=None)
+        parser_addr.add_argument('-dp', '--depth', dest="depth", default=1)
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

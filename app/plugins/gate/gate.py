@@ -10,7 +10,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
 
-import argparse
+from argparse import _SubParsersAction
 import os
 import subprocess
 import shutil
@@ -44,19 +44,18 @@ class Gate(Command):
             "Handle pull request business", 
             "Handle pull request business, including submission information checking, image building, etc")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-s', '--share_dir', dest = "share_dir")
-        parser.add_argument('-o', '--owner', dest="owner")
-        parser.add_argument('-p', '--repo', dest="repo")
-        parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
-        parser.add_argument('-juser', '--jenkins_user', dest="jenkins_user")
-        parser.add_argument('-jpwd', '--jenkins_pwd', dest="jenkins_pwd")
-        parser.add_argument('-b', '--branch', dest="branch", default="master")
-        parser.add_argument('-pr', '--pr_num', dest="pr_num")
-        parser.add_argument('-is_test', '--is_test', dest = "is_test", action = "store_true")
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-s', '--share_dir', dest = "share_dir")
+        parser_addr.add_argument('-o', '--owner', dest="owner")
+        parser_addr.add_argument('-p', '--repo', dest="repo")
+        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-juser', '--jenkins_user', dest="jenkins_user")
+        parser_addr.add_argument('-jpwd', '--jenkins_pwd', dest="jenkins_pwd")
+        parser_addr.add_argument('-b', '--branch', dest="branch", default="master")
+        parser_addr.add_argument('-pr', '--pr_num', dest="pr_num")
+        parser_addr.add_argument('-is_test', '--is_test', dest = "is_test", action = "store_true")
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

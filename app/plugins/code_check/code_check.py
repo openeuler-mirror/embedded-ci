@@ -9,7 +9,7 @@ EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
-import argparse
+from argparse import _SubParsersAction
 import os
 from app.command import Command
 from app.lib import Gitee
@@ -32,16 +32,15 @@ class CodeCheck(Command):
             "Code check pull request business", 
             "Code check pull request business, including commit msg check, commit scope check, etc")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-c', '--check_code', dest="check_code", default=None)
-        parser.add_argument('-target', '--target', dest="target")
-        parser.add_argument('-o', '--owner', dest="owner", default='openeuler')
-        parser.add_argument('-p', '--repo', dest="repo", default="")
-        parser.add_argument('-gt', '--gitee_token', dest="gitee_token", default=None)
-        parser.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-c', '--check_code', dest="check_code", default=None)
+        parser_addr.add_argument('-target', '--target', dest="target")
+        parser_addr.add_argument('-o', '--owner', dest="owner", default='openeuler')
+        parser_addr.add_argument('-p', '--repo', dest="repo", default="")
+        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token", default=None)
+        parser_addr.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)

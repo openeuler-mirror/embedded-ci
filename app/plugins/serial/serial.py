@@ -10,7 +10,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
 
-import argparse
+from argparse import _SubParsersAction
 import json
 
 from app.command import Command
@@ -30,14 +30,13 @@ class Serial(Command):
     as a string param, when we use some object param, it will be invalid
     in command, so we make object to string to solve it""")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-c', '--param', dest="params", action='append',
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-c', '--param', dest="params", action='append',
             help='''
             this param is some key and value that will be translate to base64 code, the format like -c key=value
             ''')
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         if unknow[0] == "string":

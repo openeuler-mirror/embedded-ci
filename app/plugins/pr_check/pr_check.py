@@ -10,7 +10,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details.
 '''
 
-import argparse
+from argparse import _SubParsersAction
 import json
 from app.command import Command
 from app.lib import Gitee
@@ -27,14 +27,13 @@ class PrCheck(Command):
             "get task range for this pr", 
             "This class is used to screen the changes in the current code, and determine which inspection tasks need to be executed.")
 
-    def do_add_parser(self,parser_addr: argparse._SubParsersAction):
-        parser = parser_addr.add_parser(name=self.name)
-        parser.add_argument('-o', '--owner', dest="owner")
-        parser.add_argument('-p', '--repo', dest="repo")
-        parser.add_argument('-gt', '--gitee_token', dest="gitee_token")
-        parser.add_argument('-pr', '--pr_num', dest="pr_num")
+    def do_add_parser(self, parser_addr:_SubParsersAction):
+        parser_addr.add_argument('-o', '--owner', dest="owner")
+        parser_addr.add_argument('-p', '--repo', dest="repo")
+        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-pr', '--pr_num', dest="pr_num")
 
-        return parser
+        return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)
