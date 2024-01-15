@@ -17,11 +17,9 @@ from app import util
 
 @dataclass
 class _Plugin:
-    # command name
+    # Descriptive variable names
     name: str
-    # class name
     class_name: str
-    # path
     path: str
 
 class App:
