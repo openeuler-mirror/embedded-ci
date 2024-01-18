@@ -3,12 +3,16 @@ build_check:
   board: 
   - name: raspi4
   - name: hi3093
+  - name: kp920
 - arch: arm
   board:
   - name: m4
 - arch: x86_64
   board:
   - name: x86_64
+- arch: all
+  board:
+  - name: all
 
 demo_check:
 - arch: aarch64
@@ -22,6 +26,7 @@ demo_check:
     - app_name: helloworld
     - app_name: helloworld sim
     - app_name: shell 
+    - app_name: fatfs 
   - name: rk3568_jailhouse
 - arch: x86_64
   board:

@@ -64,6 +64,10 @@ class Run(Build):
                     print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd: {build_cmd} fail')
                     build_res = Result().faild
                     do_test = False
+                elif output.find("all lib failed! ####################") >= 0 and board['name'] == all:
+                    print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd: {build_cmd} fail')
+                    build_res = Result().faild
+                    do_test = False
                 board_res.append(Board(name=f"{board['name']}", result=build_res))
             arch_res.append(Arch(name=arch["arch"], boards=board_res))
         for arch in gate_conf['demo_check']:
@@ -140,8 +144,7 @@ class Run(Build):
                     run_info = []
                     if os.path.splitext(one_file)[1] != ".bin":
                         continue
-                    if (one_file.find("UniPorton_test_posix_exit_") >= 0 or
-                       one_file.find("UniPorton_test_posix_signal_") >= 0):
+                    if one_file.find("UniPorton_test_posix_exit_") >= 0:
                         print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: skip run test: {one_file}')
                         continue
                     qemu_cmd = f"qemu-system-arm -M mps2-an386 -cpu cortex-m4 --semihosting -kernel {os.path.join(run_test_path, one_file)}"
