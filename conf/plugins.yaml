@@ -44,3 +44,6 @@ plugins:
 - name: put_to_dst
   class: PutToDst
   path: plugins/put_to_dst/put_to_dst.py
+- name: diff_files
+  class: DiffFiles
+  path: plugins/diff_files/diff_files.py

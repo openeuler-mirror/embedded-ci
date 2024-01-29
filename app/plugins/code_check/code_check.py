@@ -39,6 +39,7 @@ class CodeCheck(Command):
         parser_addr.add_argument('-p', '--repo', dest="repo", default="")
         parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token", default=None)
         parser_addr.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
+        parser_addr.add_argument('-dfs', '--diff_files', dest="diff_files", default=None)
 
         return parser_addr
 
@@ -60,4 +61,5 @@ class CodeCheck(Command):
             owner=args.owner,
             repo=args.repo,
             gitee=self.gitee,
-            pr_num=args.pr_num))
+            pr_num=args.pr_num,
+            diff_files=args.diff_files))

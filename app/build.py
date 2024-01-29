@@ -94,6 +94,8 @@ class CheckParam:
     pr_num: int = None
     gitee: Gitee = None
 
+    # for code check
+    diff_files:str = None
 
 
 class Build(ABC):
