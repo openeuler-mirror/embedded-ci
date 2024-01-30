@@ -24,9 +24,9 @@ class Run(Check):
         gitee = param.gitee
         commit_hash_list = json.loads(gitee.get_pr_commits(param.pr_num))
 
+        os.chdir(param.check_code)
         #select config to use
         if param.check_code is not None and os.path.exists(param.check_code) and os.path.exists(os.path.join(param.check_code, ".gitlint")):
-            os.chdir(param.check_code)
             config_path = os.path.join(param.check_code, ".gitlint")
         else:
             config_path = os.path.join(util.get_conf_path(), '.gitlint')
