@@ -37,6 +37,7 @@ class Run(Check):
         for file_path in diff_files:
             if file_path.endswith(".py"):
                 install_plugin['_install_flake8'] = True
+                install_plugin['_install_pylint'] = True
         for plugin in install_plugin:
             getattr(self, plugin)()
 
@@ -59,7 +60,29 @@ class Run(Check):
                 raise self.CheckError("install flake8 faild")
             print("flake8 install successful!!!")
 
+    def _install_pylint(self):
+        show_res = subprocess.run(
+            "pip show pylint",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            check=False)
+        if show_res.returncode != 0:
+            print("pylint is not installed")
+            install_res = subprocess.run(
+                "pip install pylint -i https://pypi.tuna.tsinghua.edu.cn/simple",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                check=False)
+            if install_res.returncode != 0:
+                raise self.CheckError("install pylint faild")
+            print("pylint install successful!!!")
+
     def _check_python(self, file_path:str):
+        print(f"===============->>>{file_path}")
+        check_result = True
+        # use flake8 to check code
         res = subprocess.run(
             f"flake8 {file_path} --max-line-length 100",
             stdout=subprocess.PIPE,
@@ -67,8 +90,21 @@ class Run(Check):
             check=False,
             encoding="utf-8")
         if res.returncode != 0:
-            print(f"===============->>>{file_path}")
+            print("flake8 check result:")
             print(res.stdout)
-            print("====================================================================")
-            return False
-        return True
+            check_result = False
+        # use pylint to check code
+        res = subprocess.run(
+            f"pylint {file_path}",
+            stdout=subprocess.PIPE,
+            shell=True,
+            check=False,
+            encoding="utf-8")
+        if res.returncode != 0:
+            print("pylint check result:")
+            print(res.stdout)
+            check_result = False
+        if check_result:
+            print("this file check passed successfully.")
+        print("====================================================================\n")
+        return check_result
