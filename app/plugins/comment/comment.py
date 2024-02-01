@@ -17,6 +17,7 @@ from app.plugins.comment.interface import translate_commend_param
 from app.command import Command
 from app.plugins.comment.cgate import CGate
 from app.plugins.comment.ci import CCI
+from app.plugins.comment.release import Release
 from app import util
 
 class Comment(Command):
@@ -70,6 +71,13 @@ class Comment(Command):
                     owner=args.owner,
                     gitee_token=args.gitee_token,
                     branch=args.branch)
+        if args.method == "release":
+            cls = Release()
+            cls.run(check_list=check_list,
+                    pr_num=args.pr_num,
+                    repo=args.repo,
+                    owner=args.owner,
+                    gitee_token=args.gitee_token)
 
     def format_time(self, duration_time)->str:
         '''

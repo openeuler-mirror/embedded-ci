@@ -77,7 +77,7 @@ def get_app_path():
     '''
     return os.path.join(get_top_path(), 'app')
 
-def clone_repo_with_pr(src_dir, repo, remote_url, pr_num, depth):
+def clone_repo_with_pr(src_dir, repo, remote_url, pr_num, depth, pr_type = "MERGE"):
     '''
     clone remote repo to local with pull request num
     '''
@@ -89,7 +89,7 @@ def clone_repo_with_pr(src_dir, repo, remote_url, pr_num, depth):
     os.chdir(repo_dir)
     subprocess.getoutput('git init')
     subprocess.getoutput(f'git remote add origin {remote_url}')
-    subprocess.getoutput(f'git fetch origin pull/{pr_num}/MERGE:pr_{pr_num} --depth={depth}')
+    subprocess.getoutput(f'git fetch origin pull/{pr_num}/{pr_type}:pr_{pr_num} --depth={depth}')
     subprocess.getoutput(f'git checkout pr_{pr_num}')
 
 def clone_repo_with_depth(src_dir, repo, remote_url, branch, depth):

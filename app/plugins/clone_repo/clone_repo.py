@@ -37,6 +37,7 @@ class CloneRepo(Command):
         parser_addr.add_argument('-w', '--workspace', dest="workspace", default=None)
         parser_addr.add_argument('-p', '--repo', dest="repo")
         parser_addr.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
+        parser_addr.add_argument('-pt', '--pr_type', dest="pr_type", default="MERGE")
         parser_addr.add_argument('-v', '--version', dest="version", default=None)
         parser_addr.add_argument('-dp', '--depth', dest="depth", default=1)
 
@@ -57,7 +58,8 @@ class CloneRepo(Command):
                 repo=args.repo,
                 remote_url=args.remote_url,
                 pr_num=args.pr_num,
-                depth=int(args.depth))
+                depth=int(args.depth),
+                pr_type=args.pr_type)
         else:
             util.clone_repo_with_version_depth(
                 src_dir="./",

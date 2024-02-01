@@ -46,6 +46,7 @@ class PutToDst(Command):
         parser_addr.add_argument('-w', '--remote_dst_pwd', dest="remote_dst_pwd", default=None)
         parser_addr.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey", default=None)
         parser_addr.add_argument('-ptoken', '--pypi_token', dest="pypi_token", default=None)
+        parser_addr.add_argument('-pserver', '--pypi_server_name', dest="pypi_server_name", default=None)
         return parser_addr
 
     def do_run(self, args, unknow):
@@ -75,7 +76,7 @@ class PutToDst(Command):
 
         # pypi
         elif int(args.dst_type) == 2:
-            self._put_dst_to_pypi(local_dir=local_dir, token=args.pypi_token)
+            self._put_dst_to_pypi(local_dir=local_dir, token=args.pypi_token, server_name=args.pypi_server_name)
         #error value
         else:
             return ValueError("The type value does not have a corresponding destination type!")
@@ -122,7 +123,8 @@ class PutToDst(Command):
 
     def _put_dst_to_pypi(self,
                          local_dir,
-                         token):
+                         token,
+                         server_name = "pypi"):
         # install twine
         show_res = subprocess.run(
             "pip show twine",
@@ -142,8 +144,8 @@ class PutToDst(Command):
                 raise ValueError("install flake8 faild")
             print("twine install successful!!!")
         # check if exists .pypirc
-        with open(os.path.join(os.environ['HOME'], ".pypirc"), mode="w", encoding="utf-8") as f:
-            content = f"""
+        if server_name == 'pypi':
+            pypirc = f"""
 [distutils]
   index-servers =
     pypi
@@ -152,15 +154,31 @@ class PutToDst(Command):
   username = __token__
   password = {token}
 """
-            f.write(content)
+        elif server_name == 'testpypi':
+            pypirc = f"""
+[distutils]
+  index-servers =
+    testpypi
+
+[testpypi]
+  repository = https://test.pypi.org/legacy/
+  username = __token__
+  password = {token}
+"""
+        else:
+            raise ValueError("param error")
+        with open(os.path.join(os.environ['HOME'], ".pypirc"), mode="w", encoding="utf-8") as f:
+            f.write(pypirc)
         if not os.path.isfile(local_dir):
             raise ValueError(f"{local_dir} is not exists")
         show_res = subprocess.run(
-            f"twine upload {local_dir}",
+            f"twine upload -r {server_name} {local_dir}",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            check=False)
+            check=True,
+            encoding="utf-8",
+            text=True)
         if show_res.returncode != 0:
             raise ValueError(show_res.stderr)
         print(show_res.stdout)

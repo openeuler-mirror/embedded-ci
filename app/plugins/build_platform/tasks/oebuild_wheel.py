@@ -19,6 +19,7 @@ class Run(Build):
     do openeuler image build
     """
     def do_build(self, param:BuildParam):
+        self._install_wheel()
         res = subprocess.run(
             "python3 setup.py bdist_wheel",
             shell=True,
@@ -29,5 +30,25 @@ class Run(Build):
             text=True,
             cwd=param.build_code)
         if res.returncode != 0:
-            raise ValueError(res.stderr)
+            print(res.stderr)
+            raise ValueError("pypi package task failed")
         print(res.stdout)
+
+    def _install_wheel(self):
+        show_res = subprocess.run(
+            "pip show wheel",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            check=False)
+        if show_res.returncode != 0:
+            print("wheel is not installed")
+            install_res = subprocess.run(
+                "pip install wheel -i https://pypi.tuna.tsinghua.edu.cn/simple",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                check=False)
+            if install_res.returncode != 0:
+                raise ValueError("install wheel faild")
+            print("wheel install successful!!!")

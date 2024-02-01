@@ -22,3 +22,6 @@ NATIVE_SDK_DIR = "/opt/buildtools/nativesdk/"
 PROCESS_LABEL = "ci_processing"
 SUCCESS_LABEL = "ci_successful"
 FAILED_LABEL = "ci_failed"
+
+RELEASE_SUCCESS = "release_successful"
+RELEASE_FAILED = "release_failed"
