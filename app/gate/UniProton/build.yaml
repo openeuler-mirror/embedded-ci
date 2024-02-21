@@ -10,6 +10,9 @@ build_check:
 - arch: x86_64
   board:
   - name: x86_64
+- arch: riscv64
+  board:
+  - name: rv64virt
 - arch: all
   board:
   - name: all
@@ -31,3 +34,13 @@ demo_check:
 - arch: x86_64
   board:
   - name: x86_64
+- arch: riscv64
+  board:
+  - name: riscv64virt
+    app: 
+    - app_name: hello_world
+    - app_name: rhealstone-task-switch
+    - app_name: rhealstone-task-preempt
+    - app_name: rhealstone-message-latency
+    - app_name: rhealstone-deadlock-break
+    - app_name: rhealstone-semaphore-shuffle
