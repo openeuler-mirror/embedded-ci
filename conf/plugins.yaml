@@ -47,3 +47,7 @@ plugins:
 - name: diff_files
   class: DiffFiles
   path: plugins/diff_files/diff_files.py
+- name: create_release
+  class: CreateRelease
+  path: plugins/create_release/create_release.py
+
