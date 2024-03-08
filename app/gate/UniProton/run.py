@@ -99,6 +99,7 @@ class Run(Build):
         return BuildRes(archs=arch_res)
 
     def run_build_cmd(self, run_script, run_dir):
+        print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: begin run cmd: {run_script}')
         output = ""
         ret = 1
         with subprocess.Popen(
@@ -110,19 +111,13 @@ class Run(Build):
             encoding="utf-8") as s_p:
             output, _ = s_p.communicate()
             ret = s_p.returncode
+        print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: end run cmd: {run_script}')
         return output, ret
 
-    def run_test(self, param):
-        run_test_path = os.path.join(param.repo_dir, "testsuites", "build")
-        step_reslt = []
-        test_conf_path = os.path.join(os.path.dirname(__file__), "test.yaml")
-        test_conf = util.parse_yaml(test_conf_path)
-        test_res = []
-        for test_type in test_conf['test_check']:
-            for testsuite in test_type['suite']:
-                build_cmd = f'sudo rm -rf {run_test_path}/*.bin {run_test_path}/*.elf && sh build_app.sh sim {testsuite["case"]}'
-                print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd: {build_cmd}')
-                with subprocess.Popen(
+    def run_test_build_cmd(self, run_test_path, build_cmd_prefix, testcase):
+        build_cmd = f'sudo rm -rf {run_test_path}/*.bin {run_test_path}/*.elf && {build_cmd_prefix} {testcase}'
+        print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd: {build_cmd}')
+        with subprocess.Popen(
                             build_cmd,
                             shell=True,
                             stdout=subprocess.PIPE,
@@ -131,72 +126,94 @@ class Run(Build):
                             encoding="utf-8") as t_p:
                     output_out, _ = t_p.communicate()
                     if t_p.returncode != 0:
-                        step_reslt.append(Board(name=f'build {testsuite["case"]} test', result=Result().faild))
                         print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run build cmd {build_cmd} fail, log: \n{output_out}\n')
                     else:
-                        step_reslt.append(Board(name=f'build {testsuite["case"]} test', result=Result().success))
                         print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run {build_cmd} success')
-                print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}]: ===== begin run test =====')
-                all_files = os.listdir(run_test_path)
-                run_fail = False
-                for one_file in all_files:
-                    show_log = False
-                    run_info = []
-                    if os.path.splitext(one_file)[1] != ".bin":
+                    return t_p.returncode
+
+    def run_m4_test(self, run_test_path, m4_info):
+        step_reslt = []
+        for testsuite in m4_info['suite']:
+            testcase = testsuite["case"]
+            build_ret = self.run_test_build_cmd(run_test_path, "sh build_app.sh sim", testcase)
+            if build_ret != 0:
+                step_reslt.append(Board(name=f'build {testsuite["case"]} test', result=Result().faild))
+            else:
+                step_reslt.append(Board(name=f'build {testsuite["case"]} test', result=Result().success))
+            print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}]: ===== begin run m4 test =====')
+            all_files = os.listdir(run_test_path)
+            run_fail = False
+            for one_file in all_files:
+                show_log = False
+                run_info = []
+                if os.path.splitext(one_file)[1] != ".bin":
+                    continue
+                if one_file.find("UniPorton_test_posix_exit_") >= 0:
+                    print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: skip run test: {one_file}')
+                    continue
+                qemu_cmd = f"qemu-system-arm -M mps2-an386 -cpu cortex-m4 --semihosting -kernel {os.path.join(run_test_path, one_file)}"
+                print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run test cmd: {qemu_cmd}')
+                with subprocess.Popen(
+                    qemu_cmd,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    cwd=run_test_path,
+                    encoding="utf-8") as r_p:
+                    # 判断是否正在运行
+                    if r_p.poll() is not None:
+                        output_out, _ = r_p.communicate()
+                        run_fail = True
+                        print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run test cmd: {one_file} fail, log: \n{output_out}\n')
+                        r_p.terminate()
+                        r_p.kill()
                         continue
-                    if one_file.find("UniPorton_test_posix_exit_") >= 0:
-                        print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: skip run test: {one_file}')
-                        continue
-                    qemu_cmd = f"qemu-system-arm -M mps2-an386 -cpu cortex-m4 --semihosting -kernel {os.path.join(run_test_path, one_file)}"
-                    print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run test cmd: {qemu_cmd}')
-                    with subprocess.Popen(
-                        qemu_cmd,
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        cwd=run_test_path,
-                        encoding="utf-8") as r_p:
-                        # 判断是否正在运行
-                        if r_p.poll() is not None:
-                            output_out, _ = r_p.communicate()
-                            run_fail = True
-                            print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run test cmd: {one_file} fail, log: \n{output_out}\n')
+                    # 配置定时器，防止用例错误导致qemu一直不退出
+                    r_p_stop_timer = Timer(QEMU_WAIT_TIME, kill_qemu, [r_p])
+                    r_p_stop_timer.start()
+                    check_line = r_p.stdout.readline()
+                    while r_p.poll() is None:
+                        run_info.append(check_line)
+                        # 测试结束输出 Run total testcase x, failed y
+                        if (check_line.find("Run total testcase") >= 0 and
+                            check_line.find(", failed") >= 0) :
+                            r_p_stop_timer.cancel()
                             r_p.terminate()
                             r_p.kill()
-                            continue
-                        # 配置定时器，防止用例错误导致qemu一直不退出
-                        r_p_stop_timer = Timer(QEMU_WAIT_TIME, kill_qemu, [r_p])
-                        r_p_stop_timer.start()
+                            break
                         check_line = r_p.stdout.readline()
-                        while r_p.poll() is None:
-                            run_info.append(check_line)
-                            # 测试结束输出 Run total testcase x, failed y
-                            if (check_line.find("Run total testcase") >= 0 and
-                                check_line.find(", failed") >= 0) :
-                                r_p_stop_timer.cancel()
-                                r_p.terminate()
-                                r_p.kill()
-                                break
-                            check_line = r_p.stdout.readline()
-                        print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run test cmd: {qemu_cmd} finish')
-                        if (check_line.find("Run total testcase") >= 0 and
-                                check_line.find(", failed") >= 0) :
-                            if (check_line.strip()[-1] != "0" or 
-                                check_line.strip()[-2] != " "):
-                                run_fail = True
-                                show_log = True
-                                print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run {one_file} fail, log:')
-                        else:
+                    print(f'[INFO][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run test cmd: {qemu_cmd} finish')
+                    if (check_line.find("Run total testcase") >= 0 and
+                            check_line.find(", failed") >= 0) :
+                        if (check_line.strip()[-1] != "0" or 
+                            check_line.strip()[-2] != " "):
                             run_fail = True
                             show_log = True
-                            print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run {one_file} timeout, log:')
-                    if show_log:
-                        for one_log in run_info:
-                            if one_log.strip() != "":
-                                print("\t", one_log)
+                            print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run {one_file} fail, log:')
+                    else:
+                        run_fail = True
+                        show_log = True
+                        print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: run {one_file} timeout, log:')
+                if show_log:
+                    for one_log in run_info:
+                        if one_log.strip() != "":
+                            print("\t", one_log)
                 if run_fail:
                     step_reslt.append(Board(name=f'run {testsuite["case"]} test', result=Result().faild))
                 else:
                     step_reslt.append(Board(name=f'run {testsuite["case"]} test', result=Result().success))
+        return step_reslt
+
+    def run_test(self, param):
+        run_test_path = os.path.join(param.repo_dir, "testsuites", "build")
+        step_reslt = []
+        test_conf_path = os.path.join(os.path.dirname(__file__), "test.yaml")
+        test_conf = util.parse_yaml(test_conf_path)
+        test_res = []
+        for test_type in test_conf['test_check']:
+            if test_type["type"] == "m4-qemu":
+                step_reslt = self.run_m4_test(run_test_path, test_type)
+            else:
+                print(f'[ERROR][{time.strftime("%Y-%m-%d %H:%M:%S")}]: gate yaml had no run type!')
             test_res.append(Arch(name=f'{test_type["type"]}', boards=step_reslt))
         return test_res
