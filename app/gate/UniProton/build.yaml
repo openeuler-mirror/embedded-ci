@@ -39,8 +39,4 @@ demo_check:
   - name: riscv64virt
     app: 
     - app_name: hello_world
-    - app_name: rhealstone-task-switch
-    - app_name: rhealstone-task-preempt
-    - app_name: rhealstone-message-latency
-    - app_name: rhealstone-deadlock-break
-    - app_name: rhealstone-semaphore-shuffle
+    - app_name: shell

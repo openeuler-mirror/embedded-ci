@@ -1,4 +1,9 @@
 test_check:
+- type: rv64-qemu
+  suite: 
+  - case: rhealstone
+  - case: posix
+  - case: math
 - type: m4-qemu
   suite: 
   - case: posix
