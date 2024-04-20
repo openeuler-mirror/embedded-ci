@@ -61,7 +61,7 @@ class DiffFiles(Command):
             raise ValueError(result.stderr)
         # make diff between pre_branch and diff_branch
         result = subprocess.run(
-            f"git diff {args.pre_branch} {args.remote_name}/{args.diff_branch} --name-only",
+            f"git diff {args.remote_name}/{args.diff_branch} {args.pre_branch} --name-status",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
@@ -73,6 +73,10 @@ class DiffFiles(Command):
             raise ValueError(result.stderr)
         output = result.stdout.strip("\n")
         file_splits = output.split("\n")
+        filter_files = []
         for index,_ in enumerate(file_splits):
-            file_splits[index] = os.path.join(args.repo_dir, file_splits[index])
-        print(" ".join(file_splits))
+            file_items = file_splits[index].split("\t")
+            if file_items[0] == "D":
+                continue
+            filter_files.append(os.path.join(args.repo_dir, file_items[1]))
+        print(" ".join(filter_files))
