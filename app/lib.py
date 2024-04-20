@@ -82,6 +82,18 @@ class Gitee:
 
         return resp.content
 
+    def filter_delete_commit_files(self, commit_files):
+        """
+        filter the delete status files
+        """
+        filter_commit_files = []
+        for file in commit_files:
+            # if the file is delete, passed
+            if file['patch']['deleted_file']:
+                continue
+            filter_commit_files.append(file)
+        return filter_commit_files
+
     def get_a_commit_info(self, commit_id):
         """
         get a commit info from repository

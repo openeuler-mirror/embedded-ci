@@ -40,6 +40,7 @@ class PrCheck(Command):
         self.gitee = Gitee(owner=args.owner, repo= args.repo, token=args.gitee_token)
         commits_files_data = self.gitee.get_commits_files(args.pr_num)
         commit_files_list = json.loads(commits_files_data)
+        commit_files_list = self.gitee.filter_delete_commit_files(commit_files_list)
         path_list = self._get_file_path_list(commit_files_list=commit_files_list)
         result = []
         if self.has_docs(path_list=path_list):

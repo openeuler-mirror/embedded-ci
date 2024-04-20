@@ -121,6 +121,7 @@ class Gate(Command):
         #determine whether to ask for document build
         commits_files_data = self.gitee.get_commits_files(pr_num)
         commit_files_list = json.loads(commits_files_data)
+        commit_files_list = self.gitee.filter_delete_commit_files(commit_files_list)
         # clone repo
         print("======================execute code check================================")
         code_check_res = self.code_check(repo_dir, commit_hash_list)

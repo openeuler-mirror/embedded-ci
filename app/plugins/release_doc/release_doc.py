@@ -70,6 +70,7 @@ class ReleaseDoc(Command):
         #determine if it is a document related PR
         commits_files_data = self.gitee.get_commits_files(pr_num)
         commit_files_list = json.loads(commits_files_data)
+        commit_files_list = self.gitee.filter_delete_commit_files(commit_files_list)
         if not self.is_docs_build(commit_files_list=commit_files_list):
             return
 
