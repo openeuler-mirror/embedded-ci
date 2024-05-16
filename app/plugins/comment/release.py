@@ -53,7 +53,7 @@ class Release:
                               gitee=gitee,
                               final_res=final_res)
 
-    def send_check_table(self, check_list:list[CommendParam], pr_num, gitee:Gitee, final_res:bool):
+    def send_check_table(self, check_list:list, pr_num, gitee:Gitee, final_res:bool):
         '''
         发送检查结果表格
         '''

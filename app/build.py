@@ -37,7 +37,7 @@ class Arch:
     # mark arch name
     name: str
     # mark boards result
-    boards: list[Board]
+    boards: list
 
 @dataclass
 class BuildRes:
@@ -45,7 +45,7 @@ class BuildRes:
     The class is returned as a standard for building interfaces
     '''
     # mark arch reault list
-    archs: list[Arch]
+    archs: list
 
 @dataclass
 class BuildParam:

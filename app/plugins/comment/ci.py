@@ -49,7 +49,7 @@ class CCI:
         if not final_res:
             self.send_faild_issue(check_list=check_list, gitee=gitee, branch=branch)
 
-    def send_faild_issue(self, check_list: list[CommendParam], gitee: Gitee, branch: str):
+    def send_faild_issue(self, check_list: list, gitee: Gitee, branch: str):
         '''
         xxx
         '''
