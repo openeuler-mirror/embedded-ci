@@ -32,12 +32,12 @@ class Command(ABC):
         '''
 
     @abstractmethod
-    def do_run(self, args: argparse.Namespace, unknow: List[str]):
+    def do_run(self, args: argparse.Namespace, unknow: List):
         '''
         the interface will be invoke by add_parser
         '''
 
-    def run(self, args: argparse.Namespace, unknow: List[str]):
+    def run(self, args: argparse.Namespace, unknow: List):
         '''
         run command with args
         '''

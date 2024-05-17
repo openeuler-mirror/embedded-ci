@@ -55,7 +55,7 @@ class CGate:
                               final_res=final_res,
                               duration=duration)
 
-    def send_check_table(self, check_list:list[CommendParam], pr_num, gitee:Gitee, final_res:bool, duration:str):
+    def send_check_table(self, check_list:list, pr_num, gitee:Gitee, final_res:bool, duration:str):
         '''
         xxx
         '''
