@@ -17,9 +17,11 @@ import subprocess
 from app.build import Build
 from app import util
 
-NATIVE_SDK_DIR= "/opt/buildtools/nativesdk"
+
+NATIVE_SDK_DIR = "/opt/buildtools/nativesdk"
 GCC_DIR = "/usr1/openeuler/gcc"
 PRE_SOURCE_DIR = "/usr1/src"
+
 
 class Run(Build):
     """
@@ -31,21 +33,37 @@ class Run(Build):
         '''
         oebuild_workspace = os.path.join(param.workspace, "oebuild_workspace")
         print("=========================== oebuild init ============================")
+        check_init = False
         if os.path.exists(oebuild_workspace):
-            shutil.rmtree(oebuild_workspace)
-        os.chdir(param.workspace)
-        err_code, result = subprocess.getstatusoutput("oebuild init oebuild_workspace")
+            # check if oebuild_workspace if oebuild workspace
+            list_dir = os.listdir(oebuild_workspace)
+            if ".oebuild" not in list_dir or "src" not in list_dir:
+                shutil.rmtree(oebuild_workspace)
+                check_init = True
+        else:
+            check_init = True
+        if check_init:
+            os.chdir(param.workspace)
+            err_code, result = subprocess.getstatusoutput("oebuild init oebuild_workspace")
+            if err_code != 0:
+                print(result)
+                raise ValueError(result)
+            print(result)
+        oebuild_src_dir = os.path.join(oebuild_workspace, 'src')
+        yocto_in_src_path = os.path.join(oebuild_src_dir, "yocto-meta-openeuler")
+        err_code, result = subprocess.getstatusoutput(
+            f"ln -sf {param.build_code} {yocto_in_src_path}")
         if err_code != 0:
             print(result)
             raise ValueError(result)
-        print(result)
-        oebuild_src_dir = os.path.join(oebuild_workspace, 'src')
-        yocto_in_src_path = os.path.join(oebuild_src_dir, "yocto-meta-openeuler")
-        shutil.copytree(param.build_code, yocto_in_src_path)
         print("=========================== init finished ===========================")
 
         print("======================== oebuild generate =========================")
         os.chdir(oebuild_workspace)
+        # if exists build dir,delete it
+        build_dir = os.path.join(oebuild_workspace, 'build', param.directory)
+        if os.path.exists(build_dir):
+            shutil.rmtree(build_dir)
         generate_cmd = f"oebuild generate\
             -p {param.platform}\
             -n {NATIVE_SDK_DIR}\
@@ -73,35 +91,8 @@ class Run(Build):
 
         print("======================== generate finished ========================")
 
-        print("========================= download layer ==========================")
-        # download layer with manifest.yaml
-        build_dir = os.path.join(oebuild_workspace, 'build', param.directory)
-        compile_path = os.path.join(build_dir, 'compile.yaml')
-        layer_list = util.parse_yaml(compile_path)['repos']
-        manifest_path = os.path.join(yocto_in_src_path, '.oebuild/manifest.yaml')
-        if os.path.exists(manifest_path):
-            manifest = util.parse_yaml(manifest_path)['manifest_list']
-            for value in layer_list:
-                if value in manifest:
-                    layer_repo = manifest[value]
-                    print(f"clone {value}")
-                    if os.path.exists(os.path.join(oebuild_src_dir, value)):
-                        shutil.rmtree(os.path.join(oebuild_src_dir, value))
-                    util.clone_repo_with_version_depth(
-                        src_dir = oebuild_src_dir,
-                        repo_dir = value,
-                        remote_url = layer_repo['remote_url'],
-                        version = layer_repo['version'],
-                        depth = 1)
-                else:
-                    print(f"\n\n[ERROR]:manifest.yaml don't have info to download repo {value}.")
-                    raise ValueError(f"manifest.yaml don't have info to download repo {value}.")
-        print("==================== download layer finished ======================")
-
-        # add not_use_repos = true
-        self._add_content_to_file(compile_path, "not_use_repos: true")
-
         # add rm_work in case avoid large cache causes the disk to fill up when building
+        compile_path = os.path.join(build_dir, 'compile.yaml')
         compile_conf = util.parse_yaml(compile_path)
         local_conf = compile_conf['local_conf']
         local_conf += '\nINHERIT += "rm_work"\n'
@@ -110,7 +101,7 @@ class Run(Build):
         compile_conf['local_conf'] = local_conf
         util.write_yaml(compile_path, compile_conf)
 
-        #establish a soft link to access the source code present in the container
+        # establish a soft link to access the source code present in the container
         if os.path.isdir(PRE_SOURCE_DIR):
             for pkg_name in os.listdir(PRE_SOURCE_DIR):
                 pkg_path = os.path.join(PRE_SOURCE_DIR, pkg_name)
@@ -158,5 +149,5 @@ class Run(Build):
             data = r_f.read()
 
         data = context + "\n" + data
-        with open(file_path, 'w', encoding= 'utf-8') as w_f:
+        with open(file_path, 'w', encoding='utf-8') as w_f:
             w_f.write(data)
