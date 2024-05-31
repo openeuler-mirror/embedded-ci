@@ -83,6 +83,8 @@ class Run(Build):
                 generate_cmd = generate_cmd + f" -s_dir {param.sstate_cache_out}"
             else:
                 print("[WARN]:Parameter sstate_cache_out was not successfully applied ")
+        if param.oebuild_extra is not None:
+            generate_cmd = generate_cmd + f' {param.oebuild_extra}'
 
         err_code, result = subprocess.getstatusoutput(generate_cmd)
         if err_code != 0:

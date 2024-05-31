@@ -46,6 +46,7 @@ class BuildPlatform(Command):
         parser_addr.add_argument('-d', '--directory', dest="directory", default="build")
         parser_addr.add_argument('-s_in', '--sstate_cache_in', dest="sstate_cache_in", default=None)
         parser_addr.add_argument('-s_out', '--sstate_cache_out', dest="sstate_cache_out", default=None)
+        parser_addr.add_argument('-oe', '--oebuild_extra', dest="oebuild_extra", default=None)
 
         return parser_addr
 
@@ -77,4 +78,5 @@ class BuildPlatform(Command):
             directory=args.directory,
             datetime=args.datetime,
             sstate_cache_in=args.sstate_cache_in,
-            sstate_cache_out=args.sstate_cache_out))
+            sstate_cache_out=args.sstate_cache_out,
+            oebuild_extra=args.oebuild_extra))

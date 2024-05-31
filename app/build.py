@@ -64,6 +64,7 @@ class BuildParam:
     datetime: str = None
     sstate_cache_in: str = None
     sstate_cache_out: str = None
+    oebuild_extra: str = None
 
     #when gate.py remove ,four para can be delete
     repo_dir: str = None
