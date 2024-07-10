@@ -90,6 +90,7 @@ class Run(Build):
         if err_code != 0:
             print(result)
             raise ValueError(result)
+        print(result)
 
         print("======================== generate finished ========================")
 

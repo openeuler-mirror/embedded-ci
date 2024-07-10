@@ -4,7 +4,7 @@ openEuler Embedded基础设施工程采用sstate-cache技术，以及openeuler_f
 
 总体架构如下图所示：
 
-![层级图](images/层级图.png)
+![层级图](images/layer.png)
 
 openEuler Embedded 基础设施总体由三个模块组成：
 
@@ -22,7 +22,7 @@ GATE: 门禁模块，该模块处理来自pull request的提交
 
 三个模块之间的逻辑图如下
 
-![](images/架构图.png)
+![](images/structure.png)
 
 从图中可以看出，CI模块与GATE模块依赖定时模块产生的sstate-cache，CI模块与门禁模块在进行构建时会先拷贝定时模块产生的sstate-cache，然后再开始构建，由于yocto的sstate-cache机制，因此构建效率会极大的提升。因为需要拷贝，因此需要CRON，CI以及GATE有一个共享磁盘，CRON将sstate-cache保存到共享磁盘上，CI与GATE从共享磁盘指定路径进行拷贝。
 
@@ -128,7 +128,7 @@ build_list:
 
 CI流程图如下：
 
-![](images/CI流程图.png)
+![](images/process.png)
 
 CI在jenkins中通过配置pipline流水线来运行， jenkins流水线配置：
 
