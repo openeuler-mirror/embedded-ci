@@ -22,6 +22,7 @@ import yaml
 import git
 
 from json2table import convert
+from urllib.parse import urlsplit
 
 def check_oebuild_directory(o_dir: str):
     '''
@@ -193,3 +194,10 @@ def add_sum_to_local_dir(local_dir):
                     sha256.update(data)
                 with open(f'{file_path}.sha256sum', 'w', encoding="utf-8") as w_f:
                     w_f.write(f"{str(sha256.hexdigest())} {file_name}")
+
+def is_url(variable):
+    try:
+        result = urlsplit(variable)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False

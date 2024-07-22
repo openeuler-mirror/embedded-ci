@@ -77,7 +77,11 @@ class CGate:
                 check_result = Result().get_emoji(Result().success)+"SUCCESS"
             else:
                 check_result = Result().get_emoji(Result().faild)+"FAILD"
-            log_link = f"<a href='{os.path.join(os.environ['BUILD_URL'], check.log_path)}'>#{os.environ['BUILD_NUMBER']}</a>"
+            if (util.is_url(check.log_path)):
+                log_link = f"<a href='{check.log_path}'>#{os.environ['BUILD_NUMBER']}</a>"
+            else:
+                log_link = f"<a href='{os.path.join(os.environ['BUILD_URL'], check.log_path)}'>#{os.environ['BUILD_NUMBER']}</a>"
+
             table.append({"检查项":check.name,"操作":check.action,"结果":check_result,"链接":log_link})
         html = util.json_to_html(json_data={caption: table}, direc="TOP_TO_BOTTOM")
         gitee.comment_pr(pr_num=pr_num, comment=html)
