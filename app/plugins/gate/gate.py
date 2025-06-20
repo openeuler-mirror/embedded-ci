@@ -133,7 +133,7 @@ class Gate(Command):
         doc_check_blacklist = util.parse_yaml(os.path.join(util.get_conf_path(),'doc_check_blacklist.yaml'))
         doc_repo_list = doc_check_blacklist['repo_list']
         is_have_doc, is_have_code = self.is_docs_build(commit_files_list)
-        if is_have_doc:
+        if is_have_doc and self.repo not in doc_repo_list:
             print("======================execute doc check================================")
             doc_res = self.doc_build_check(repo_dir=repo_dir)
             print("======================doc check finished================================")
