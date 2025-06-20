@@ -130,6 +130,8 @@ class Gate(Command):
         doc_res = []
         build_res = BuildRes(archs=[])
         # check pull request if docs
+        doc_check_blacklist = util.parse_yaml(os.path.join(util.get_conf_path(),'doc_check_blacklist.yaml'))
+        doc_repo_list = doc_check_blacklist['repo_list']
         is_have_doc, is_have_code = self.is_docs_build(commit_files_list)
         if is_have_doc:
             print("======================execute doc check================================")
