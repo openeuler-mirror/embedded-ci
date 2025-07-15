@@ -188,9 +188,12 @@ def add_sum_to_local_dir(local_dir):
         if os.path.isdir(file_path):
             add_sum_to_local_dir(file_path)
         else:
-            sha256 = hashlib.sha256(''.encode('utf-8'))
+            sha256 = hashlib.sha256()
             with open(file_path, 'rb') as r_f:
-                while data := r_f.read(1024):
+                while True:
+                    data = r_f.read(1024)
+                    if not data:
+                        break
                     sha256.update(data)
                 with open(f'{file_path}.sha256sum', 'w', encoding="utf-8") as w_f:
                     w_f.write(f"{str(sha256.hexdigest())} {file_name}")
