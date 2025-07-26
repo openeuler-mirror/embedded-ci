@@ -280,7 +280,7 @@ class Gate(Command):
         pr_file = os.path.join(pr_dir, str(pr_num))
         if not os.path.exists(pr_file):
             os.mknod(pr_file)
-        with open(pr_file, 'r', encoding='utf-8') as r_f:
+        with open(pr_file, 'w+', encoding='utf-8') as r_f:
             fcntl.flock(r_f.fileno(), fcntl.LOCK_EX)
             pr_data =  r_f.read()
             if pr_data != '':
@@ -299,9 +299,8 @@ class Gate(Command):
                                 build_num=pr_json['build_num'])
                     except:
                         pass
-            with open(pr_file, 'w', encoding='utf-8') as w_f:
-                pr_data = {"job_name": job_name, 'build_num': build_num}
-                yaml.dump(pr_data, w_f)
+            pr_data = {"job_name": job_name, 'build_num': build_num}
+            yaml.dump(pr_data, r_f)
 
 class Code:
     '''
