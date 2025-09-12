@@ -263,6 +263,31 @@ class Remote:
         sftp_cli.close()
         ssh_cli.close()
 
+    def put_file_to_remote(self, local_path, dst_dir, is_delete_dst=False):
+        '''
+        put local directory to destination
+        '''
+        ssh_cli, sftp_cli = self._get_ssh_client()
+        if is_delete_dst:
+            ssh_cli.exec_command(f"rm -rf {dst_dir}/*")
+            ssh_cli.exec_command(f"mkdir -p {dst_dir}")
+
+        ssh_cli.exec_command(f"mkdir -p {dst_dir}")
+        remote_file = os.path.join(dst_dir, os.path.basename(local_path))
+        try:
+            print(local_path)
+            sftp_cli.put(local_path, remote_file)
+            time.sleep(0.1)
+            print(f"dst_file: {remote_file} successful")
+        except FileNotFoundError:
+            print(f"local_file: {local_path} not exists")
+        except IOError:
+            print(f"file put faild: {local_path}")
+
+        sftp_cli.close()
+        ssh_cli.close()
+
+
 class Result:
     '''
     A result formatting class that performs formatting operations on result parameters

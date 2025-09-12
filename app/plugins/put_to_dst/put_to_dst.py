@@ -102,11 +102,17 @@ class PutToDst(Command):
             remote_pwd=remote_dst_pwd,
             remote_key=remote_dst_sshkey
             )
-        self.remote.put_to_remote(
-            local_dir=local_dir,
-            dst_dir=dst_dir,
-            is_delete_dst=delete_original)
-
+        if os.path.isdir(local_dir):
+            self.remote.put_to_remote(
+                local_dir=local_dir,
+                dst_dir=dst_dir,
+                is_delete_dst=delete_original)
+        if os.path.isfile(local_dir):
+            self.remote.put_file_to_remote(
+                local_path=local_dir,
+                dst_dir=dst_dir,
+                is_delete_dst=delete_original
+            )
 
     def _put_dst_to_local(self,
                             sign_file,
