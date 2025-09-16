@@ -193,8 +193,9 @@ class Remote:
     '''
     A simple Remote class that mainly implements the function of file upload
     '''
-    def __init__(self, remote_ip, remote_user, remote_pwd, remote_key):
+    def __init__(self, remote_ip, remote_port, remote_user, remote_pwd, remote_key):
         self.remote_ip = remote_ip
+        self.remote_port = remote_port
         self.remote_user = remote_user
         self.remote_pwd = remote_pwd
         self.remote_key = remote_key
@@ -206,12 +207,14 @@ class Remote:
             if self.remote_key is None:
                 ssh_cli.connect(
                     hostname = self.remote_ip,
+                    port = self.remote_port,
                     username = self.remote_user,
                     password = self.remote_pwd)
             else:
                 pri_key = RSAKey.from_private_key_file(self.remote_key)
                 ssh_cli.connect(
                     hostname = self.remote_ip,
+                    port = self.remote_port,
                     username = self.remote_user,
                     pkey=pri_key)
 

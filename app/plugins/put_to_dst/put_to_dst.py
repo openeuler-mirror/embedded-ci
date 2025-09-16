@@ -42,6 +42,7 @@ class PutToDst(Command):
         parser_addr.add_argument('-sign', '--sign_file', dest="sign_file", action="store_true")
         parser_addr.add_argument('-d', '--delete_original', dest="delete_original", action="store_true")
         parser_addr.add_argument('-i', '--remote_dst_ip', dest="remote_dst_ip", default=None)
+        parser_addr.add_argument('-p', '--remote_dst_port', dest="remote_dst_port", default="22")
         parser_addr.add_argument('-u', '--remote_dst_user', dest="remote_dst_user", default=None)
         parser_addr.add_argument('-w', '--remote_dst_pwd', dest="remote_dst_pwd", default=None)
         parser_addr.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey", default=None)
@@ -58,6 +59,7 @@ class PutToDst(Command):
         if int(args.dst_type) == 0:
             self._put_dst_to_remote(
                 remote_dst_ip = args.remote_dst_ip,
+                remote_dst_port = args.remote_dst_port,
                 remote_dst_user = args.remote_dst_user,
                 remote_dst_pwd = args.remote_dst_pwd,
                 remote_dst_sshkey = args.remote_dst_sshkey,
@@ -83,6 +85,7 @@ class PutToDst(Command):
 
     def _put_dst_to_remote(self,
                            remote_dst_ip,
+                           remote_dst_port,
                            remote_dst_user,
                            remote_dst_pwd,
                            remote_dst_sshkey,
@@ -90,7 +93,10 @@ class PutToDst(Command):
                            local_dir,
                            dst_dir,
                            delete_original):
-        if remote_dst_ip is None or remote_dst_user is None or (remote_dst_pwd is None and remote_dst_sshkey is None):
+        if remote_dst_ip is None \
+            or remote_dst_port is None \
+            or remote_dst_user is None \
+            or (remote_dst_pwd is None and remote_dst_sshkey is None):
             return ValueError("Missing remote related parameters!")
 
         if sign_file:
@@ -98,6 +104,7 @@ class PutToDst(Command):
 
         self.remote = Remote(
             remote_ip=remote_dst_ip,
+            remote_port=remote_dst_port,
             remote_user=remote_dst_user,
             remote_pwd=remote_dst_pwd,
             remote_key=remote_dst_sshkey
