@@ -12,12 +12,21 @@ See the Mulan PSL v2 for more details.
 
 import os
 import time
+from app import util
 
 import requests
-import jenkins
-from paramiko import SSHClient, AutoAddPolicy, RSAKey, SSHException
+try:
+    import jenkins
+except ImportError:
+    util.install_package('python-jenkins')
+    import jenkins
 
-from app import util
+try:
+    from paramiko import SSHClient, AutoAddPolicy, RSAKey, SSHException
+except ImportError:
+    util.install_package('paramiko')
+    from paramiko import SSHClient, AutoAddPolicy, RSAKey, SSHException
+
 
 class Gitee:
     '''
@@ -212,6 +221,8 @@ class Remote:
                     password = self.remote_pwd)
             else:
                 pri_key = RSAKey.from_private_key_file(self.remote_key)
+                # 打印连接参数
+                print(f"Connecting to {self.remote_ip}:{self.remote_port} as user {self.remote_user}")
                 ssh_cli.connect(
                     hostname = self.remote_ip,
                     port = self.remote_port,

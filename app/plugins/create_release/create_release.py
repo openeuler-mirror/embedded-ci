@@ -19,7 +19,12 @@ from argparse import _SubParsersAction
 import os
 
 import requests
-from ruamel.yaml import YAML
+try:
+    from ruamel.yaml import YAML
+except ImportError:
+    from app.util import install_package
+    install_package('ruamel.yaml')
+    from ruamel.yaml import YAML
 
 from app.command import Command
 

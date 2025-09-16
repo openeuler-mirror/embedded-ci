@@ -17,11 +17,35 @@ import subprocess
 import random
 import base64
 import hashlib
+import sys
+import time
 
 import yaml
 import git
 
-from json2table import convert
+def install_package(package_name):
+    pkg_mirror = "https://pypi.tuna.tsinghua.edu.cn/simple"
+    cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", pkg_mirror]
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            subprocess.check_call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print(f"Successfully installed {package_name}")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Attempt {attempt + 1} failed: {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(2)  # 等待2秒后重试
+    
+    print(f"Failed to install {package_name} after {max_retries} attempts")
+    return False
+
+try:
+    from json2table import convert
+except ImportError:
+    install_package('json2table')
+    from json2table import convert
+
 from urllib.parse import urlsplit
 
 def check_oebuild_directory(o_dir: str):
