@@ -16,7 +16,7 @@ import json
 from jenkins import JenkinsException
 
 from app.command import Command
-from app.lib import Jenkins, Gitee
+from app.lib import Jenkins, Gitcode
 from app.const import PROCESS_LABEL, SUCCESS_LABEL, FAILED_LABEL
 
 class Pre(Command):
@@ -25,7 +25,7 @@ class Pre(Command):
     '''
     def __init__(self):
         self.jenkins = None
-        self.gitee = None
+        self.gitcode = None
         self.owner = None
         self.repo = None
         self.pr_num = None
@@ -43,7 +43,7 @@ class Pre(Command):
         parser_addr.add_argument('-s', '--share_dir', dest = "share_dir")
         parser_addr.add_argument('-juser', '--jenkins_user', dest="jenkins_user")
         parser_addr.add_argument('-jpwd', '--jenkins_pwd', dest="jenkins_pwd")
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token")
 
         return parser_addr
 
@@ -54,7 +54,7 @@ class Pre(Command):
         self.pr_num = args.pr_num
         self.share_dir = args.share_dir
         self.jenkins = Jenkins(jenkins_user=args.jenkins_user, jenkins_token=args.jenkins_pwd)
-        self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
+        self.gitcode = Gitcode(owner=args.owner, repo=args.repo, token=args.git_token)
 
         jenkins_info = self.get_jenkins_job_info()
         if jenkins_info is not None:
@@ -134,7 +134,7 @@ class Pre(Command):
             pre_build_info = self.jenkins.get_build_info(job_name=job_name, build_num=build_num)
             if 'building' in pre_build_info and pre_build_info['building']:
                 comment = "you retrigger the gatekeeper, the previous access task will stop and then restart the new access mission"
-                self.gitee.comment_pr(pr_num=self.pr_num, comment=comment)
+                self.gitcode.comment_pr(pr_num=self.pr_num, comment=comment)
                 self.jenkins.stop_build_by_build_num(
                     job_name=job_name,
                     build_num=build_num)
@@ -143,5 +143,5 @@ class Pre(Command):
             pass
 
     def _set_process_label(self, ):
-        self.gitee.delete_tags_of_pr(self.pr_num, SUCCESS_LABEL, FAILED_LABEL)
-        self.gitee.add_tags_of_pr(self.pr_num, PROCESS_LABEL)
+        self.gitcode.delete_tags_of_pr(self.pr_num, SUCCESS_LABEL, FAILED_LABEL)
+        self.gitcode.add_tags_of_pr(self.pr_num, PROCESS_LABEL)

@@ -37,7 +37,7 @@ class Comment(Command):
         parser_addr.add_argument('-o', '--owner', dest="owner")
         parser_addr.add_argument('-p', '--repo', dest="repo")
         parser_addr.add_argument('-dt', '--duration_time', dest="duration_time", default=None)
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token")
         parser_addr.add_argument('-pr', '--pr_num', dest="pr_num")
         parser_addr.add_argument('-b', '--branch', dest="branch")
         parser_addr.add_argument('-chk', '--checks', dest='checks', action='append')
@@ -62,14 +62,14 @@ class Comment(Command):
                     pr_num=args.pr_num,
                     repo=args.repo,
                     owner=args.owner,
-                    gitee_token=args.gitee_token,
+                    git_token=args.git_token,
                     duration = duration_str)
         if args.method == "ci":
             cls = CCI()
             cls.run(check_list=check_list,
                     repo=args.repo,
                     owner=args.owner,
-                    gitee_token=args.gitee_token,
+                    git_token=args.git_token,
                     branch=args.branch)
         if args.method == "release":
             cls = Release()
@@ -77,7 +77,7 @@ class Comment(Command):
                     pr_num=args.pr_num,
                     repo=args.repo,
                     owner=args.owner,
-                    gitee_token=args.gitee_token)
+                    git_token=args.git_token)
 
     def format_time(self, duration_time)->str:
         '''

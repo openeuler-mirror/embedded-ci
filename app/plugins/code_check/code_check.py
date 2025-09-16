@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details.
 from argparse import _SubParsersAction
 import os
 from app.command import Command
-from app.lib import Gitee
+from app.lib import Gitcode
 from app import util
 from app.build import Check, CheckParam
 
@@ -23,7 +23,7 @@ class CodeCheck(Command):
     '''
     def __init__(self):
         self.workspace = os.environ['HOME']
-        self.gitee = None
+        self.gitcode = None
         self.pr_num = None
         self.repo = None
 
@@ -37,7 +37,7 @@ class CodeCheck(Command):
         parser_addr.add_argument('-target', '--target', dest="target")
         parser_addr.add_argument('-o', '--owner', dest="owner", default='openeuler')
         parser_addr.add_argument('-p', '--repo', dest="repo", default="")
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token", default=None)
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token", default=None)
         parser_addr.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
         parser_addr.add_argument('-dfs', '--diff_files', dest="diff_files", default=None)
 
@@ -47,7 +47,7 @@ class CodeCheck(Command):
         args = self.parser.parse_args(unknow)
         self.pr_num = args.pr_num
         self.repo = args.repo
-        self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
+        self.gitcode = Gitcode(owner=args.owner, repo=args.repo, token=args.git_token)
 
         #check build_code
         if args.check_code is not None and not os.path.isdir(args.check_code):
@@ -60,6 +60,6 @@ class CodeCheck(Command):
             check_code=args.check_code,
             owner=args.owner,
             repo=args.repo,
-            gitee=self.gitee,
+            gitcode=self.gitcode,
             pr_num=args.pr_num,
             diff_files=args.diff_files))

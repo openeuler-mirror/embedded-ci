@@ -21,11 +21,11 @@ import yaml
 
 from app import util
 from app.command import Command
-from app.lib import Remote, Gitee
+from app.lib import Remote, Gitcode
 from app import const
 
-GITEE_YOCTO = "yocto-meta-openeuler"
-GITEE_SPACE = "openeuler"
+GITCODE_YOCTO = "yocto-meta-openeuler"
+GITCODE_SPACE = "openeuler"
 NATIVE_SDK_DIR= "/opt/buildtools/nativesdk"
 GCC_DIR = "/usr1/openeuler/gcc"
 
@@ -42,7 +42,7 @@ class CI(Command):
         self.workspace = os.path.join(os.environ['HOME'], 'oebuild_workspace')
         self.branch = None
         self.remote = None
-        self.gitee = None
+        self.gitcode = None
 
         super().__init__(
             "ci", 
@@ -60,7 +60,7 @@ Periodically build the corresponding release image according to the relevant con
         parser_addr.add_argument('-k', '--remote_dst_sshkey', dest="remote_dst_sshkey")
         parser_addr.add_argument('-o', '--owner', dest="owner")
         parser_addr.add_argument('-p', '--repo', dest="repo")
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token")
         parser_addr.add_argument('-sf', '--send_faild', dest = "is_send_faild", action = "store_true")
         parser_addr.add_argument('-dm', '--delete_tmp', dest = "is_delete_tmp", action = "store_true")
 
@@ -79,7 +79,7 @@ Periodically build the corresponding release image according to the relevant con
             )
 
         if args.is_send_faild:
-            self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
+            self.gitcode = Gitcode(owner=args.owner, repo=args.repo, token=args.git_token)
 
         self.exec(
             dst_dir=args.remote_dst_dir,
@@ -104,18 +104,18 @@ Periodically build the corresponding release image according to the relevant con
         # second copy basic layer to workspace and run oebuild update
         workspace_src_dir = os.path.join(self.workspace, "src")
         os.chdir(workspace_src_dir)
-        print(f"clone {GITEE_YOCTO}")
+        print(f"clone {GITCODE_YOCTO}")
         util.clone_repo_with_depth(
             src_dir=workspace_src_dir,
-            repo=GITEE_YOCTO,
-            remote_url=f"https://gitee.com/{GITEE_SPACE}/{GITEE_YOCTO}.git",
+            repo=GITCODE_YOCTO,
+            remote_url=f"https://gitcode.com/{GITCODE_SPACE}/{GITCODE_YOCTO}.git",
             branch=self.branch,
             depth=1)
 
         # get cron config
         # if yocto-meta-openeuler have a build config for ci in workflow directory, use it;
         # otherwise, use the build config for ci in embedded-ci
-        build_path_in_oe = os.path.join(workspace_src_dir,GITEE_YOCTO,".oebuild/workflows/ci.yaml")
+        build_path_in_oe = os.path.join(workspace_src_dir,GITCODE_YOCTO,".oebuild/workflows/ci.yaml")
         build_path_in_ci = os.path.join(util.get_conf_path(), const.CI_CONF)
         if os.path.exists(build_path_in_oe):
             ci_conf_path = build_path_in_oe
@@ -150,7 +150,7 @@ Periodically build the corresponding release image according to the relevant con
                 print(result)
 
                 # download layer with manifest
-                yocto_dir = os.path.join(workspace_src_dir, GITEE_YOCTO)
+                yocto_dir = os.path.join(workspace_src_dir, GITCODE_YOCTO)
                 compile_path = os.path.join(
                     self.workspace,
                     'build',
@@ -339,7 +339,7 @@ Periodically build the corresponding release image according to the relevant con
             issue_msg = issue_msg + f"please click <a href={build_url}>here</a> for detail"
             time_str = time.strftime("%Y-%m-%d %X", time.localtime())
             title = f"[{self.branch}]构建失败  {time_str}"
-            self.gitee.add_issue_to_repo(title=title, body=issue_msg)
+            self.gitcode.add_issue_to_repo(title=title, body=issue_msg)
 
     def _add_content_to_file(self, file_path, key_value):
         with open(file_path, 'r', encoding='utf-8') as r_f:

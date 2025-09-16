@@ -169,6 +169,148 @@ class Gitee:
             return False
         return True
 
+class Gitcode:
+    '''
+    reencapsulate some of Gitcode's interface to pull requests
+    '''
+
+    def __init__(self, owner, repo, token=None):
+        self._owner = owner
+        self._repo = repo
+        self._token = token
+        self._api_url_pre = "https://api.gitcode.com/api/v5/repos"
+        self.request_ok_list = [
+            requests.codes['ok'],
+            requests.codes['created'],
+            requests.codes['no_content']]
+        self.request_timeout = 10
+
+    @property
+    def owner(self):
+        '''
+        return param owner
+        '''
+        return self._owner
+
+    @property
+    def repo(self):
+        '''
+        return param repo
+        '''
+        return self._repo
+
+    @property
+    def token(self):
+        '''
+        return param token
+        '''
+        return self._token
+
+    def get_pr_commits(self, pr_num):
+        '''
+        get pull request commits list
+        '''
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/commits"
+        if self._token is not None:
+            url = url + rf"?access_token={self._token}"
+        resp = requests.get(url=url, timeout=self.request_timeout)
+        if resp.status_code not in self.request_ok_list:
+            return None
+
+        return resp.content
+
+    def get_commits_files(self, pr_num):
+        """
+        get pull request commits with files
+        """
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/files"
+        if self._token is not None:
+            url = url + rf"?access_token={self._token}"
+        resp = requests.get(url=url, timeout=self.request_timeout)
+        if resp.status_code not in self.request_ok_list:
+            return None
+
+        return resp.content
+
+    def filter_delete_commit_files(self, commit_files):
+        """
+        filter the delete status files
+        """
+        filter_commit_files = []
+        for file in commit_files:
+            # if the file is delete, passed
+            if file['patch']['deleted_file']:
+                continue
+            filter_commit_files.append(file)
+        return filter_commit_files
+
+    def get_a_commit_info(self, commit_id):
+        """
+        get a commit info from repository
+        """
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/commits/{commit_id}?show_diff=true"
+        if self._token is not None:
+            url = url + rf"&access_token={self._token}"
+
+        resp = requests.get(url=url, timeout=self.request_timeout)
+        if resp.status_code not in self.request_ok_list:
+            return None
+
+        return resp.content
+
+    def comment_pr(self, pr_num, comment):
+        '''
+        add comment to pull request
+        '''
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/comments"
+        data = {"access_token": self._token, "body": comment}
+
+        resp = requests.post(url=url, data=data, timeout=self.request_timeout)
+
+        if resp.status_code not in self.request_ok_list:
+            print(f"status_code: {resp.status_code}, content: {resp.content.decode()}")
+            return False
+        return True
+
+    def add_tags_of_pr(self, pr_num, *tags):
+        '''
+        add tags to pull request
+        '''
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/labels?access_token={self._token}"
+
+        resp = requests.post(url=url, json=list(tags), timeout=self.request_timeout)
+        if resp.status_code not in self.request_ok_list:
+            print(f"status_code: {resp.status_code}, content: {resp.content.decode()}")
+            return False
+        return True
+
+    def delete_tags_of_pr(self, pr_num, *tags):
+        '''
+        delete tags to pull request
+        '''
+        name = ','.join(list(tags))
+        url = rf"{self._api_url_pre}/{self._owner}/{self._repo}/pulls/{pr_num}/labels/{name}?access_token={self._token}"
+
+        resp = requests.delete(url=url, timeout=self.request_timeout)
+        if resp.status_code not in self.request_ok_list:
+            print(f"status_code: {resp.status_code}, content: {resp.content.decode()}")
+            return False
+        return True
+
+    def add_issue_to_repo(self, title, body):
+        '''
+        add issue to repo
+        '''
+        url = rf"{self._api_url_pre}/{self._owner}/issues"
+        data = {"access_token": self._token, "repo": self._repo,"title":title, "body": body}
+
+        resp = requests.post(url=url, data=data, timeout=self.request_timeout)
+
+        if resp.status_code not in self.request_ok_list:
+            print(f"status_code: {resp.status_code}, content: {resp.content.decode()}")
+            return False
+        return True
+
 class Jenkins:
     '''
     a simple Jenkins class with built-in interfaces with high demand frequency
