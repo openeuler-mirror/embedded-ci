@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from app.lib import Result
-from app.lib import Gitee
+from app.lib import Gitcode
 
 @dataclass
 class Board:
@@ -93,7 +93,7 @@ class CheckParam:
     owner: str = None
     repo: str = None
     pr_num: int = None
-    gitee: Gitee = None
+    gitcode: Gitcode = None
 
     # for code check
     diff_files:str = None

@@ -20,7 +20,7 @@ import json
 import yaml
 
 from app.command import Command
-from app.lib import Gitee, Jenkins, Result
+from app.lib import Gitcode, Jenkins, Result
 from app import util
 from app.build import Build,BuildRes,BuildParam
 
@@ -30,7 +30,7 @@ class Gate(Command):
     '''
     def __init__(self):
         self.jenkins = None
-        self.gitee = None
+        self.gitcode = None
         self.workspace = "/home/jenkins/agent"
         self.gate_share = None
         self.share_dir = None
@@ -48,7 +48,7 @@ class Gate(Command):
         parser_addr.add_argument('-s', '--share_dir', dest = "share_dir")
         parser_addr.add_argument('-o', '--owner', dest="owner")
         parser_addr.add_argument('-p', '--repo', dest="repo")
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token")
         parser_addr.add_argument('-juser', '--jenkins_user', dest="jenkins_user")
         parser_addr.add_argument('-jpwd', '--jenkins_pwd', dest="jenkins_pwd")
         parser_addr.add_argument('-b', '--branch', dest="branch", default="master")
@@ -64,11 +64,11 @@ class Gate(Command):
         self.branch = args.branch
         self.pr_num = args.pr_num
 
-        self.gitee = Gitee(owner=args.owner, repo=args.repo, token=args.gitee_token)
+        self.gitcode = Gitcode(owner=args.owner, repo=args.repo, token=args.git_token)
         if not args.is_test:
             self.jenkins = Jenkins(jenkins_user=args.jenkins_user, jenkins_token=args.jenkins_pwd)
         self.repo = args.repo
-        self.remote_url = f"https://gitee.com/{args.owner}/{args.repo}.git"
+        self.remote_url = f"https://gitcode.com/{args.owner}/{args.repo}.git"
 
         self.exec(owner=args.owner, pr_num=args.pr_num, is_test=args.is_test)
 
@@ -80,7 +80,7 @@ class Gate(Command):
         if not is_test:
             build_url = os.path.join(os.environ['BUILD_URL'], 'console')
         comment = f"the gate is running, if you want to get message immediately, please click <a href='{build_url}'>here</a> for detail"
-        self.gitee.comment_pr(pr_num=pr_num, comment=comment)
+        self.gitcode.comment_pr(pr_num=pr_num, comment=comment)
 
     def exec(self,owner,pr_num,is_test):
         '''
@@ -96,12 +96,12 @@ class Gate(Command):
                 pr_num = pr_num)
         # send user gate link when task is starting
         self.send_build_link(pr_num=pr_num, is_test=is_test)
-        # delete ci_progress tag in gitee
-        self.gitee.delete_tags_of_pr(pr_num, "ci_successful", "ci_failed")
-        self.gitee.add_tags_of_pr(pr_num, 'ci_processing')
+        # delete ci_progress tag in gitcode
+        self.gitcode.delete_tags_of_pr(pr_num, "ci_successful", "ci_failed")
+        self.gitcode.add_tags_of_pr(pr_num, 'ci_processing')
 
         # first get pr commit list, and then clone pr with depth = len(commit)
-        commit_data = self.gitee.get_pr_commits(pr_num=pr_num)
+        commit_data = self.gitcode.get_pr_commits(pr_num=pr_num)
         commit_list = json.loads(commit_data)
         commit_hash_list = self._get_hash_from_commit(commit_list=commit_list)
 
@@ -119,9 +119,9 @@ class Gate(Command):
 
 
         #determine whether to ask for document build
-        commits_files_data = self.gitee.get_commits_files(pr_num)
+        commits_files_data = self.gitcode.get_commits_files(pr_num)
         commit_files_list = json.loads(commits_files_data)
-        commit_files_list = self.gitee.filter_delete_commit_files(commit_files_list)
+        commit_files_list = self.gitcode.filter_delete_commit_files(commit_files_list)
         # clone repo
         print("======================execute code check================================")
         code_check_res = self.code_check(repo_dir, commit_hash_list)
@@ -148,7 +148,7 @@ class Gate(Command):
         '''
         execute code check and return result
         '''
-        code = Code(repo_dir, self.gitee)
+        code = Code(repo_dir, self.gitcode)
         return code.exec(commit_hash_list)
 
     def doc_build_check(self,repo_dir):
@@ -188,7 +188,7 @@ class Gate(Command):
 
     def send_result(self, pr_num, code_check_list, doc_check_list, build_check_list:BuildRes, is_test: bool):
         '''
-        format result to html table and send to gitee comment
+        format result to html table and send to gitcode comment
         '''
         def format_code_check_list(code_check_list):
             format_code_check = {}
@@ -242,14 +242,14 @@ class Gate(Command):
         if not is_test:
             build_url = os.path.join(os.environ['BUILD_URL'], 'console')
         comment = comment + f"Please click <a href='{build_url}'>here</a> for details"
-        self.gitee.comment_pr(pr_num=pr_num, comment=comment)
+        self.gitcode.comment_pr(pr_num=pr_num, comment=comment)
 
-        # send check result tag to gitee
-        self.gitee.delete_tags_of_pr(pr_num, 'ci_processing')
+        # send check result tag to gitcode
+        self.gitcode.delete_tags_of_pr(pr_num, 'ci_processing')
         if final_res is Result().success:
-            self.gitee.add_tags_of_pr(pr_num, 'ci_successful')
+            self.gitcode.add_tags_of_pr(pr_num, 'ci_successful')
         else:
-            self.gitee.add_tags_of_pr(pr_num, 'ci_failed')
+            self.gitcode.add_tags_of_pr(pr_num, 'ci_failed')
 
     def _get_hash_from_commit(self, commit_list):
         hash_list = []
@@ -293,7 +293,7 @@ class Gate(Command):
                             build_num=pr_json['build_num'])
                         if 'building' in pre_build_info and pre_build_info['building']:
                             comment = "you retrigger the gatekeeper, the previous access task will stop and then restart the new access mission"
-                            self.gitee.comment_pr(pr_num=pr_num, comment=comment)
+                            self.gitcode.comment_pr(pr_num=pr_num, comment=comment)
                             self.jenkins.stop_build_by_build_num(
                                 job_name=pr_json['job_name'],
                                 build_num=pr_json['build_num'])
@@ -307,9 +307,9 @@ class Code:
     the code check will be executed commit check
     '''
 
-    def __init__(self, repo_dir, gitee: Gitee):
+    def __init__(self, repo_dir, gitcode: Gitcode):
         self.repo_dir = repo_dir
-        self.gitee = gitee
+        self.gitcode = gitcode
 
     def exec(self, commit_hash_list: list):
         '''
@@ -345,7 +345,7 @@ class Code:
         check_success = True
         for commit in commit_hash_list:
             #get all filename in a commit
-            commit_info = json.loads(self.gitee.get_a_commit_info(commit))
+            commit_info = json.loads(self.gitcode.get_a_commit_info(commit))
             filename_list = [commit_files["filename"] for commit_files in commit_info["files"]]
             if len(filename_list) == 0:
                 print("In a pull request, no files have been deleted, added, or modified. \

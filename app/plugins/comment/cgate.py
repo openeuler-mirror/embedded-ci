@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details.
 import os
 
 from app.plugins.comment.interface import CommendParam
-from app.lib import Gitee, Result
+from app.lib import Gitcode, Result
 from app.const import PROCESS_LABEL, SUCCESS_LABEL, FAILED_LABEL
 from app import util
 
@@ -30,15 +30,15 @@ class CGate:
             pr_num: int,
             repo: str,
             owner: str,
-            gitee_token: str,
+            git_token: str,
             duration: str):
         '''
         gate run body
         '''
-        if gitee_token != "":
-            gitee = Gitee(owner=owner,repo=repo,token=gitee_token)
+        if git_token != "":
+            gitcode = Gitcode(owner=owner,repo=repo,token=git_token)
         else:
-            gitee = None
+            gitcode = None
 
         final_res = True
         for check in check_list:
@@ -46,16 +46,16 @@ class CGate:
                 final_res = False
                 break
         if final_res:
-            self._set_success_label(pr_num=pr_num, gitee=gitee)
+            self._set_success_label(pr_num=pr_num, gitcode=gitcode)
         else:
-            self._set_failed_label(pr_num=pr_num, gitee=gitee)
+            self._set_failed_label(pr_num=pr_num, gitcode=gitcode)
         self.send_check_table(check_list=check_list,
                               pr_num=pr_num,
-                              gitee=gitee,
+                              gitcode=gitcode,
                               final_res=final_res,
                               duration=duration)
 
-    def send_check_table(self, check_list:list, pr_num, gitee:Gitee, final_res:bool, duration:str):
+    def send_check_table(self, check_list:list, pr_num, gitcode:Gitcode, final_res:bool, duration:str): 
         '''
         xxx
         '''
@@ -84,12 +84,12 @@ class CGate:
 
             table.append({"检查项":check.name,"操作":check.action,"结果":check_result,"链接":log_link})
         html = util.json_to_html(json_data={caption: table}, direc="TOP_TO_BOTTOM")
-        gitee.comment_pr(pr_num=pr_num, comment=html)
+        gitcode.comment_pr(pr_num=pr_num, comment=html)
 
-    def _set_success_label(self, pr_num, gitee: Gitee):
-        gitee.delete_tags_of_pr(pr_num, PROCESS_LABEL, FAILED_LABEL)
-        gitee.add_tags_of_pr(pr_num, SUCCESS_LABEL)
+    def _set_success_label(self, pr_num, gitcode: Gitcode):
+        gitcode.delete_tags_of_pr(pr_num, PROCESS_LABEL, FAILED_LABEL)
+        gitcode.add_tags_of_pr(pr_num, SUCCESS_LABEL)
 
-    def _set_failed_label(self, pr_num, gitee: Gitee):
-        gitee.delete_tags_of_pr(pr_num, PROCESS_LABEL, SUCCESS_LABEL)
-        gitee.add_tags_of_pr(pr_num, FAILED_LABEL)
+    def _set_failed_label(self, pr_num, gitcode: Gitcode):
+        gitcode.delete_tags_of_pr(pr_num, PROCESS_LABEL, SUCCESS_LABEL)
+        gitcode.add_tags_of_pr(pr_num, FAILED_LABEL)

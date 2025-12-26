@@ -37,7 +37,7 @@ class CloneRepo(Command):
         parser_addr.add_argument('-w', '--workspace', dest="workspace", default=None)
         parser_addr.add_argument('-p', '--repo', dest="repo")
         parser_addr.add_argument('-pr', '--pr_num', dest="pr_num", default=None)
-        parser_addr.add_argument('-pt', '--pr_type', dest="pr_type", default="MERGE")
+        parser_addr.add_argument('-pt', '--pr_type', dest="pr_type", default="head")
         parser_addr.add_argument('-v', '--version', dest="version", default=None)
         parser_addr.add_argument('-dp', '--depth', dest="depth", default=1)
 

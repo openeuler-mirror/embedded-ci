@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details.
 import os
 import time
 
-from app.lib import Gitee, Result
+from app.lib import Gitcode, Result
 from app.plugins.comment.interface import CommendParam
 from app import util
 
@@ -29,17 +29,17 @@ class CCI:
             check_list: list,
             repo: str,
             owner: str,
-            gitee_token: str,
+            git_token: str,
             branch: str):
         '''
         asfdads
         '''
         if len(check_list) <= 0:
             pass
-        if gitee_token != "":
-            gitee = Gitee(owner=owner,repo=repo,token=gitee_token)
+        if git_token != "":
+            gitcode = Gitcode(owner=owner,repo=repo,token=git_token)
         else:
-            gitee = None
+            gitcode = None
 
         final_res = True
         for check in check_list:
@@ -47,9 +47,9 @@ class CCI:
                 final_res = False
                 break
         if not final_res:
-            self.send_faild_issue(check_list=check_list, gitee=gitee, branch=branch)
+            self.send_faild_issue(check_list=check_list, gitcode=gitcode, branch=branch)
 
-    def send_faild_issue(self, check_list: list, gitee: Gitee, branch: str):
+    def send_faild_issue(self, check_list: list, gitcode: Gitcode, branch: str):
         '''
         xxx
         '''
@@ -73,5 +73,5 @@ class CCI:
         html = util.json_to_html(json_data={caption: table}, direc="TOP_TO_BOTTOM")
         time_str = time.strftime("%Y-%m-%d %X", time.localtime())
         title = f"[{branch}]构建失败  {time_str}"
-        gitee.add_issue_to_repo(title=title, body=html)
+        gitcode.add_issue_to_repo(title=title, body=html)
         

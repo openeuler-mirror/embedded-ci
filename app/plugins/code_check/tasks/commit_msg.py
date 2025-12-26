@@ -21,8 +21,8 @@ class Run(Check):
     check commit msg and return result
     '''
     def do_check(self, param):
-        gitee = param.gitee
-        commit_hash_list = json.loads(gitee.get_pr_commits(param.pr_num))
+        gitcode = param.gitcode
+        commit_hash_list = json.loads(gitcode.get_pr_commits(param.pr_num))
 
         os.chdir(param.check_code)
         #select config to use
@@ -45,7 +45,7 @@ class Run(Check):
             for check_res in res:
                 print("commit:" + check_res['commit'])
                 print("check result: \n", check_res['result'])
-                link = "https://openeuler.gitee.io/yocto-meta-openeuler/master/develop_help/commit.html"
+                link = "https://pages.openeuler.openatom.cn/embedded/docs/build/html/master/developer_guide/commit.html"
                 print(f"refer to commit msg convention with link:\n\n\n    {link}")
                 print("============================================================")
             raise self.CheckError("Commit msg did't comply with the convention")

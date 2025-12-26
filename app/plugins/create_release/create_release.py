@@ -41,7 +41,7 @@ class CreateRelease(Command):
             " Create a distribution and upload corresponding files")
 
     def do_add_parser(self, parser_addr: _SubParsersAction):
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token")
         parser_addr.add_argument('-y', '--yaml_path', dest="yaml_path")
         parser_addr.add_argument('-f', '--file', dest="file_path")
         parser_addr.add_argument('-o', '--overwrite', dest="overwrite")
@@ -60,7 +60,7 @@ class CreateRelease(Command):
                 raise FileNotFoundError(f"the {args.file_path} not exists")
 
         json_data = read_yaml(pathlib.Path(args.yaml_path))
-        response_info = create_release(args.gitee_token, json_data)
+        response_info = create_release(args.git_token, json_data)
         if response_info.status_code != 201:
             print(response_info.text)
             logging.error('create release failed')
@@ -68,7 +68,7 @@ class CreateRelease(Command):
         logging.info('Successfully created release')
 
         upload_file(args.file_path, json.loads(response_info.content)['id'], json_data['owner'],
-                    json_data['repo'], args.gitee_token)
+                    json_data['repo'], args.git_token)
         logging.info('file upload successful')
 
 
@@ -92,7 +92,7 @@ def create_release(access_token, json_data):
     """
 
     Args:
-        access_token:gitee token
+        access_token:git token
         json_data:post data path
 
     Returns:
@@ -102,7 +102,7 @@ def create_release(access_token, json_data):
         'Authorization': 'token ' + access_token,
         'Content-Type': 'application/json'
     }
-    create_url = f'https://gitee.com/api/v5/repos/{json_data["owner"]}/{json_data["repo"]}/releases'
+    create_url = f'https://api.gitcode.com/api/v5/repos/{json_data["owner"]}/{json_data["repo"]}/releases'
     res = requests.post(create_url, headers=headers, json=json_data)
     return res
 
@@ -113,7 +113,7 @@ def upload_file(file_dir, release_id, owner, repo, access_token):
     }
     files = os.listdir(file_dir)
     chunk_size = 1024 * 1024 * 50  # 例如，每个分片1KB
-    post_url = f'https://gitee.com/api/v5/repos/{owner}/{repo}/releases/{release_id}/attach_files'
+    post_url = f'https://api.gitcode.com/api/v5/repos/{owner}/{repo}/releases/{release_id}/attach_files'
     merge_sh = "#! /bin/bash\n\n"
     for file in files:
         if os.path.getsize(pathlib.Path(file_dir, file)) > chunk_size:

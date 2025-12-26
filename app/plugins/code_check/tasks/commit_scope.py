@@ -18,9 +18,9 @@ class Run(Check):
     and both cannot coexist in a commit
     '''
     def do_check(self, param):
-        gitee = param.gitee
+        gitcode = param.gitcode
         #get commits in a pr
-        commit_hash_list = json.loads(gitee.get_pr_commits(param.pr_num))
+        commit_hash_list = json.loads(gitcode.get_pr_commits(param.pr_num))
         if len(commit_hash_list) == 0:
             print("In a pull request, no files have been deleted, added, or modified. \
                     Please commit something.")
@@ -29,7 +29,7 @@ class Run(Check):
         check_success = True
         for commit in commit_hash_list:
             #get all filename in a commit
-            commit_info = json.loads(gitee.get_a_commit_info(commit["sha"]))
+            commit_info = json.loads(gitcode.get_a_commit_info(commit["sha"]))
             filename_list = [commit_files["filename"] for commit_files in commit_info["files"]]
             if len(filename_list) == 0:
                 print("In a pull request, no files have been deleted, added, or modified. \

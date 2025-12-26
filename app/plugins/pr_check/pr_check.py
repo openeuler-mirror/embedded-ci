@@ -13,14 +13,14 @@ See the Mulan PSL v2 for more details.
 from argparse import _SubParsersAction
 import json
 from app.command import Command
-from app.lib import Gitee
+from app.lib import Gitcode
 
 class PrCheck(Command):
     '''
     This class is used to screen the changes in the current code, and determine which inspection tasks need to be executed.
     '''
     def __init__(self):
-        self.gitee = None
+        self.gitcode = None
 
         super().__init__(
             "pr_check", 
@@ -30,17 +30,17 @@ class PrCheck(Command):
     def do_add_parser(self, parser_addr:_SubParsersAction):
         parser_addr.add_argument('-o', '--owner', dest="owner")
         parser_addr.add_argument('-p', '--repo', dest="repo")
-        parser_addr.add_argument('-gt', '--gitee_token', dest="gitee_token")
+        parser_addr.add_argument('-gt', '--git_token', dest="git_token")
         parser_addr.add_argument('-pr', '--pr_num', dest="pr_num")
 
         return parser_addr
 
     def do_run(self, args, unknow):
         args = self.parser.parse_args(unknow)
-        self.gitee = Gitee(owner=args.owner, repo= args.repo, token=args.gitee_token)
-        commits_files_data = self.gitee.get_commits_files(args.pr_num)
+        self.gitcode = Gitcode(owner=args.owner, repo= args.repo, token=args.git_token)
+        commits_files_data = self.gitcode.get_commits_files(args.pr_num)
         commit_files_list = json.loads(commits_files_data)
-        commit_files_list = self.gitee.filter_delete_commit_files(commit_files_list)
+        commit_files_list = self.gitcode.filter_delete_commit_files(commit_files_list)
         path_list = self._get_file_path_list(commit_files_list=commit_files_list)
         result = []
         if self.has_docs(path_list=path_list):
